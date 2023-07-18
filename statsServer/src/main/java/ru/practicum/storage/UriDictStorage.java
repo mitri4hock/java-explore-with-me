@@ -8,11 +8,11 @@ import java.util.Optional;
 
 @Repository
 public interface UriDictStorage extends JpaRepository<UriDict, Long> {
-    boolean existsByUri_name(String uriName);
+    boolean existsByUriName(String uriName);
 
     UriDict save(UriDict uriDict);
 
-    Optional<UriDict> findByUri_name(String uriName);
+    Optional<UriDict> findByUriName(String uriName);
 
 
 }

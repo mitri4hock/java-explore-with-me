@@ -17,7 +17,7 @@ import ru.practicum.storage.UriDictStorage;
 @Slf4j
 @Transactional(readOnly = true)
 @AllArgsConstructor
-public class HitsServiceImpl implements HitsService {
+public class HitServiceImpl implements HitService {
     private final HitsStorage hitsStorage;
     private final AppDictStorage appDictStorage;
     private final UriDictStorage uriDictStorage;
@@ -25,19 +25,19 @@ public class HitsServiceImpl implements HitsService {
     @Override
     @Transactional
     public HitsDto createHit(HitsDto hitsDto) {
-        if (!appDictStorage.existsByApp_name(hitsDto.getApp())) {
+        if (!appDictStorage.existsByAppName(hitsDto.getApp())) {
             AppDict newAppDict = HitsMapper.toAppDict(hitsDto);
             log.info("Создан новый элемент в таблице app_dict: {}", newAppDict);
             appDictStorage.save(newAppDict);
         }
-        if (!uriDictStorage.existsByUri_name(hitsDto.getUri())) {
+        if (!uriDictStorage.existsByUriName(hitsDto.getUri())) {
             UriDict newUriDict = HitsMapper.toUriDict(hitsDto);
             log.info("Создан новый элемент в таблице uri_dict: {}", newUriDict);
             uriDictStorage.save(newUriDict);
         }
         Hits newHits = HitsMapper.toHits(hitsDto,
-                appDictStorage.findByApp_name(hitsDto.getApp()).orElse(null),
-                uriDictStorage.findByUri_name(hitsDto.getUri()).orElse(null));
+                appDictStorage.findByAppName(hitsDto.getApp()).orElse(null),
+                uriDictStorage.findByUriName(hitsDto.getUri()).orElse(null));
         log.info("Создана новая запись в таблице hits: {}", newHits);
         hitsStorage.save(newHits);
         return HitsMapper.toHitsDto(newHits);

@@ -8,11 +8,12 @@ import java.util.Optional;
 
 @Repository
 public interface AppDictStorage extends JpaRepository<AppDict, Long> {
-    boolean existsByApp_name(String appName);
+    boolean existsByAppName(String appName);
 
     AppDict save(AppDict appDict);
 
-    Optional<AppDict> findByApp_name(String appName);
+    Optional<AppDict> findByAppName(String appName);
+
 
 
 

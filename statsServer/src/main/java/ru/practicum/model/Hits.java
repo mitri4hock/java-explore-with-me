@@ -18,7 +18,7 @@ public class Hits {
     @JoinColumn(name = "app_id")
     private AppDict app;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "uri_dict")
+    @JoinColumn(name = "uri_id")
     private UriDict uri;
     @Column(name = "ip")
     private String ip;
