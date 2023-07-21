@@ -17,20 +17,23 @@ public interface HitsStorage extends JpaRepository<Hits, Long> {
     @Query("select new ru.practicum.dto.ViewStatsDto(t.app.appName , t.uri.uriName , count(distinct t.ip) ) " +
             " from Hits as t " +
             " where t.timestamp between ?1 and ?2 " +
-            " group by t.app.appName, t.uri.uriName ")
+            " group by t.app.appName, t.uri.uriName " +
+            " order by count(distinct t.ip) desc ")
     List<ViewStatsDto> getStatsIpIsDistinctAndUriIsNot(LocalDateTime timestampStart, LocalDateTime timestampEnd);
 
     @Query("select new ru.practicum.dto.ViewStatsDto(t.app.appName , t.uri.uriName , count(t.ip) ) " +
             " from Hits as t " +
             " where t.timestamp between ?1 and ?2 " +
-            " group by t.app.appName, t.uri.uriName ")
+            " group by t.app.appName, t.uri.uriName " +
+            " order by count(t.ip) desc ")
     List<ViewStatsDto> getStatsIpIsAnDistinctAndUriIsNot(LocalDateTime timestampStart, LocalDateTime timestampEnd);
 
     @Query("select new ru.practicum.dto.ViewStatsDto(t.app.appName , t.uri.uriName , count(distinct t.ip) ) " +
             " from Hits as t " +
             " where t.timestamp between ?1 and ?2 " +
             " and t.uri.uriName in ?3" +
-            " group by t.app.appName, t.uri.uriName ")
+            " group by t.app.appName, t.uri.uriName " +
+            " order by count(distinct t.ip) desc ")
     List<ViewStatsDto> getStatsIpIsDistinctAndUriIsBe(LocalDateTime timestampStart, LocalDateTime timestampEnd,
                                                       Collection<String> uriNames);
 
@@ -38,7 +41,8 @@ public interface HitsStorage extends JpaRepository<Hits, Long> {
             " from Hits as t " +
             " where t.timestamp between ?1 and ?2 " +
             " and t.uri.uriName in ?3" +
-            " group by t.app.appName, t.uri.uriName ")
+            " group by t.app.appName, t.uri.uriName " +
+            " order by count(t.ip) desc ")
     List<ViewStatsDto> getStatsIpIsAnDistinctAndUriIsBe(LocalDateTime timestampStart, LocalDateTime timestampEnd,
                                                         Collection<String> uriNames);
 }
