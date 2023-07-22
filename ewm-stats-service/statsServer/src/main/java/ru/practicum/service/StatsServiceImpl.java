@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.ConstantsUtil;
 import ru.practicum.dto.ViewStatsDto;
 import ru.practicum.storage.HitsStorage;
 
@@ -22,7 +23,7 @@ public class StatsServiceImpl implements StatsService {
 
     @Override
     public List<ViewStatsDto> findStatsOfHits(String start, String end, ArrayList<String> uris, Boolean unique) {
-        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(ConstantsUtil.formatDate);
         LocalDateTime startLDT = LocalDateTime.parse(start, dateTimeFormatter);
         LocalDateTime endLDT = LocalDateTime.parse(end, dateTimeFormatter);
 

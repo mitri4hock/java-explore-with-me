@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import ru.practicum.ConstantsUtil;
 import ru.practicum.dto.ViewStatsDto;
 import ru.practicum.exception.BadParamException;
 
@@ -19,7 +20,7 @@ public class StatsClient {
     @Value("${stats-server.url}")
     private String statsServerUrl;
     private static final String API_PREFIX = "/stats";
-    private DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(ConstantsUtil.formatDate);
 
     public StatsClient() {
         this.restTemplate = new RestTemplate();
