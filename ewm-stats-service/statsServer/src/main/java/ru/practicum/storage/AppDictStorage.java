@@ -13,9 +13,4 @@ public interface AppDictStorage extends JpaRepository<AppDict, Long> {
     AppDict save(AppDict appDict);
 
     Optional<AppDict> findByAppName(String appName);
-
-
-
-
-
 }

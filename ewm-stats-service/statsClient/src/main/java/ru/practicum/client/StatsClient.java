@@ -9,7 +9,6 @@ import ru.practicum.dto.ViewStatsDto;
 import ru.practicum.exception.BadParamException;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,22 +19,22 @@ public class StatsClient {
     @Value("${stats-server.url}")
     private String statsServerUrl;
     private static final String API_PREFIX = "/stats";
-    private DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(ConstantsUtil.formatDate);
 
     public StatsClient() {
         this.restTemplate = new RestTemplate();
     }
 
-    public List<ViewStatsDto> findStatsOfHits(String start, String end, ArrayList<String> uris, Boolean unique) {
+    public List<ViewStatsDto> findStatsOfHits(LocalDateTime start, LocalDateTime end, ArrayList<String> uris, Boolean unique) {
 
-        if (LocalDateTime.parse(start, dateTimeFormatter).isAfter(LocalDateTime.parse(end, dateTimeFormatter))) {
+        if (start.isAfter(end)) {
             String str = String.format("При запросе статистики были неверно указаны даты интервала." +
                     " Start = %s, End = %s", start, end);
             log.info(str);
             throw new BadParamException(str);
         }
-        String url = String.join("", statsServerUrl, API_PREFIX, "?start=", start, "&end=",
-                end, "&unique=", unique.toString());
+        String url = String.join("", statsServerUrl, API_PREFIX, "?start=",
+                String.format(ConstantsUtil.formatDate, start), "&end=", String.format(ConstantsUtil.formatDate, end),
+                "&unique=", unique.toString());
         if (uris != null) {
             for (String x : uris) {
                 url = url + "&uris=" + x;

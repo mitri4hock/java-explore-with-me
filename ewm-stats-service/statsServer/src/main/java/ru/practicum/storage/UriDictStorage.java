@@ -13,6 +13,4 @@ public interface UriDictStorage extends JpaRepository<UriDict, Long> {
     UriDict save(UriDict uriDict);
 
     Optional<UriDict> findByUriName(String uriName);
-
-
 }
