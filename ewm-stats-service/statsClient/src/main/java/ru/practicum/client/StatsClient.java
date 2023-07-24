@@ -33,7 +33,7 @@ public class StatsClient {
             throw new BadParamException(str);
         }
         String url = String.join("", statsServerUrl, API_PREFIX, "?start=",
-                String.format(ConstantsUtil.formatDate, start), "&end=", String.format(ConstantsUtil.formatDate, end),
+                String.format(ConstantsUtil.FORMAT_DATE, start), "&end=", String.format(ConstantsUtil.FORMAT_DATE, end),
                 "&unique=", unique.toString());
         if (uris != null) {
             for (String x : uris) {

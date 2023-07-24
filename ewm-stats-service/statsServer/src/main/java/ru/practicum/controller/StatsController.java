@@ -24,8 +24,8 @@ public class StatsController {
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public List<ViewStatsDto> findStatsOfHits(
-            @RequestParam(value = "start") @DateTimeFormat(pattern = ConstantsUtil.formatDate) LocalDateTime start,
-            @RequestParam(value = "end") @DateTimeFormat(pattern = ConstantsUtil.formatDate) LocalDateTime end,
+            @RequestParam(value = "start") @DateTimeFormat(pattern = ConstantsUtil.FORMAT_DATE) LocalDateTime start,
+            @RequestParam(value = "end") @DateTimeFormat(pattern = ConstantsUtil.FORMAT_DATE) LocalDateTime end,
             @RequestParam(value = "uris", required = false) ArrayList<String> uris,
             @RequestParam(value = "unique", defaultValue = "false") Boolean unique) {
         return statsService.findStatsOfHits(start, end, uris, unique);
