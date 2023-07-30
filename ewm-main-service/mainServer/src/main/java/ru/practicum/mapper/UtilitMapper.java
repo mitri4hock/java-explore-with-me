@@ -2,6 +2,7 @@ package ru.practicum.mapper;
 
 import lombok.experimental.UtilityClass;
 import ru.practicum.dto.EventFullDto;
+import ru.practicum.dto.EventShortDto;
 import ru.practicum.dto.NewEventDto;
 import ru.practicum.enums.StateEnum;
 import ru.practicum.model.Category;
@@ -35,7 +36,7 @@ public class UtilitMapper {
         return result;
     }
 
-    public EventFullDto toEventFullDto(Event event, Integer confirmedRequests, Integer views) {
+    public EventFullDto toEventFullDto(Event event, Long confirmedRequests, Long views) {
         EventFullDto result = new EventFullDto();
 
         String publishedOn = null;
@@ -57,6 +58,23 @@ public class UtilitMapper {
         result.setPublishedOn(publishedOn);
         result.setRequestModeration(event.getRequestModeration());
         result.setState(event.getState().toString());
+        result.setTitle(event.getTitle());
+        result.setViews(views);
+
+        return result;
+    }
+
+    public EventShortDto toEventShortDto(Event event, Long confirmedRequests, Long views) {
+        EventShortDto result = new EventShortDto();
+
+        result.setId(event.getId());
+        result.setAnnotation(event.getAnnotation());
+        result.setCategory(CustomMapper.INSTANCE.toCategoryDto(event.getCategory()));
+        result.setConfirmedRequests(confirmedRequests);
+        result.setDescription(event.getDescription());
+        result.setEventDate(event.getEventDate().format(dateTimeFormatter));
+        result.setInitiator(CustomMapper.INSTANCE.toUserSortDto(event.getInitiator()));
+        result.setPaid(event.getPaid());
         result.setTitle(event.getTitle());
         result.setViews(views);
 

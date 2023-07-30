@@ -15,7 +15,7 @@ services:
     image: stats_server
     container_name: stats-server
     ports:
-      - "9090:9091"
+      - "9090:9090"
     depends_on:
       - stats-db
     environment:
@@ -71,4 +71,5 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://ewm-db:5432/main
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=root1
+      - STATSSERVER_SERVER_URL=http://stats-server:9090
 

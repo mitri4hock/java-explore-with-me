@@ -26,7 +26,7 @@ public class CategoriesController {
      */
     @GetMapping("/categories")
     @ResponseStatus(HttpStatus.OK)
-    public List<CategoryDto> findCategories(@RequestParam(value = "from", defaultValue = "0") Integer from,
+    public List<CategoryDto> findCategories(@RequestParam(value = "from", defaultValue = "0") @PositiveOrZero Integer from,
                                             @RequestParam(value = "size", defaultValue = "10") @Positive Integer size) {
         return categoriesService.findCategories(from, size);
     }
