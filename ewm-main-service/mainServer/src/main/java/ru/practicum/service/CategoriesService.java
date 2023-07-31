@@ -12,4 +12,6 @@ public interface CategoriesService {
     List<CategoryDto> findCategories(Integer from, Integer size);
 
     CategoryDto findCategoriById(Long catId);
+
+    void deleteCategory(Long catId);
 }

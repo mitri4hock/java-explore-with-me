@@ -4,9 +4,11 @@ import lombok.experimental.UtilityClass;
 import ru.practicum.dto.EventFullDto;
 import ru.practicum.dto.EventShortDto;
 import ru.practicum.dto.NewEventDto;
+import ru.practicum.dto.ParticipationRequestDto;
 import ru.practicum.enums.StateEnum;
 import ru.practicum.model.Category;
 import ru.practicum.model.Event;
+import ru.practicum.model.EventRequest;
 import ru.practicum.model.User;
 import ru.practicum.util.UtilClass;
 
@@ -80,4 +82,46 @@ public class UtilitMapper {
 
         return result;
     }
+
+    public ParticipationRequestDto toParticipationRequestDto(EventRequest eventRequest) {
+        ParticipationRequestDto rez = new ParticipationRequestDto();
+
+        rez.setCreated(eventRequest.getCreated().format(dateTimeFormatter));
+        rez.setEvent(eventRequest.getEvent().getId());
+        rez.setId(eventRequest.getId());
+        rez.setRequester(eventRequest.getRequester().getId());
+        rez.setStatus(eventRequest.getStatus().name());
+
+        return rez;
+    }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

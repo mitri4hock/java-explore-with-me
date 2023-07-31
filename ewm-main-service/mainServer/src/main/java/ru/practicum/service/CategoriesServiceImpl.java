@@ -9,11 +9,13 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.dto.CategoryDto;
+import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.ErrorDtoUtil;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.mapper.CustomMapper;
 import ru.practicum.model.Category;
 import ru.practicum.storage.CategoriesStorage;
+import ru.practicum.storage.EventStorage;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -25,6 +27,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class CategoriesServiceImpl implements CategoriesService {
     private final CategoriesStorage categoriesStorage;
+    private final EventStorage eventStorage;
 
     @Override
     @Transactional
@@ -70,8 +73,27 @@ public class CategoriesServiceImpl implements CategoriesService {
         var rezult = categoriesStorage.findById(catId).orElseThrow(() -> {
             log.info("запрошена несуществующая категория id={}", catId);
             throw new NotFoundException(String.join("", "Category with id=", catId.toString(),
-                    " was not found"), new ErrorDtoUtil("The required object was not found.", LocalDateTime.now()));
+                    " was not found"), new ErrorDtoUtil("The required object was not found.",
+                    LocalDateTime.now()));
         });
         return CustomMapper.INSTANCE.toCategoryDto(rezult);
+    }
+
+    @Override
+    public void deleteCategory(Long catId) {
+        if (categoriesStorage.findById(catId).isEmpty()) {
+            log.info("Запрошено удаление несуществующей категории. id={}", catId);
+            throw new NotFoundException(String.join("", "Category with id=", catId.toString(),
+                    " was not found"), new ErrorDtoUtil("The required object was not found.",
+                    LocalDateTime.now()));
+        }
+        if (!eventStorage.findByCategory_Id(catId).isEmpty()) {
+            log.info("Запрошено удаление категории, со связанными событиями. Id={}", catId);
+            throw new ConflictException("The category is not empty",
+                    new ErrorDtoUtil("For the requested operation the conditions are not met.",
+                            LocalDateTime.now()));
+        }
+        categoriesStorage.deleteById(catId);
+        log.info("категория с id={} удалена", catId);
     }
 }

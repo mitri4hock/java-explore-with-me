@@ -15,7 +15,11 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Map<String, String> badParamException(final BadParametrException e) {
-        return Map.of("error", e.getMessage());
+        return Map.of("status", HttpStatus.BAD_REQUEST.name(),
+                "reason", e.getErrorDtoUtil().getReason(),
+                "message", e.getMessage(),
+                "timestamp", e.getErrorDtoUtil().getTimestamp()
+                        .format(DateTimeFormatter.ofPattern(UtilClass.FORMAT_DATE)));
     }
 
     @ExceptionHandler

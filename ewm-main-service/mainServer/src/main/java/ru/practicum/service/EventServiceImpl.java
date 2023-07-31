@@ -8,10 +8,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.client.StatisticModuleClient;
-import ru.practicum.dto.EventFullDto;
-import ru.practicum.dto.EventShortDto;
-import ru.practicum.dto.NewEventDto;
-import ru.practicum.dto.UpdateEventUserRequestDto;
+import ru.practicum.dto.*;
 import ru.practicum.enums.EventRequestStatusEnum;
 import ru.practicum.enums.StateActionEnum;
 import ru.practicum.enums.StateEnum;
@@ -28,6 +25,7 @@ import ru.practicum.storage.EventStorage;
 import ru.practicum.storage.UserStorage;
 import ru.practicum.util.UtilClass;
 
+import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -200,8 +198,48 @@ public class EventServiceImpl implements EventService {
                     LocalDateTime.now()));
         }
         return UtilitMapper.toEventFullDto(event,
-                eventRequestStorage.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED, eventId),
+                eventRequestStorage.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED,
+                        eventId),
                 statisticModuleClient.getCountViewsOfHit(String.join("", "/events/",
                         eventId.toString())));
+    }
+
+    @Override
+    public EventFullDto findPublishedEvent(Long id, HttpServletRequest request) {
+        var rez = eventStorage.findByIdAndState(id, StateEnum.PUBLISHED).orElseThrow(() -> {
+            log.info("Опубликованное событие не найдено. id={}", id);
+            throw new NotFoundException(String.join("", "User with id=", id.toString(),
+                    " was not found"), new ErrorDtoUtil("The required object was not found.",
+                    LocalDateTime.now()));
+        });
+        statisticModuleClient.postRequestToHit(request);
+        return UtilitMapper.toEventFullDto(rez,
+                eventRequestStorage.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED,
+                        rez.getId()),
+                statisticModuleClient.getCountViewsOfHit(String.join("", "/events/",
+                        rez.getId().toString())));
+    }
+
+    @Override
+    public List<ParticipationRequestDto> getParticipationForUser(Long userId, Long eventId) {
+        if (userStorage.findById(userId).isEmpty()) {
+            log.info("запрошено наличие заявки в события несуществующим пользователем с id={}", userId);
+            throw new NotFoundException(String.join("", "User with id=", userId.toString(),
+                    " was not found"), new ErrorDtoUtil("The required object was not found.",
+                    LocalDateTime.now()));
+        }
+        if (eventStorage.findById(eventId).isEmpty()) {
+            log.info("запрошено наличие заявки в несуществующее событие с id={}", eventId);
+            throw new NotFoundException(String.join("", "Event with id=", eventId.toString(),
+                    " was not found"), new ErrorDtoUtil("The required object was not found.",
+                    LocalDateTime.now()));
+        }
+        var rez = eventRequestStorage.findByRequester_IdAndEvent_IdOrderByCreatedDesc(userId,
+                eventId);
+        return rez.stream()
+                .map(UtilitMapper::toParticipationRequestDto)
+                .collect(Collectors.toList());
+
+
     }
 }

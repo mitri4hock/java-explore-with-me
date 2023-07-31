@@ -1,10 +1,8 @@
 package ru.practicum.service;
 
-import ru.practicum.dto.EventFullDto;
-import ru.practicum.dto.EventShortDto;
-import ru.practicum.dto.NewEventDto;
-import ru.practicum.dto.UpdateEventUserRequestDto;
+import ru.practicum.dto.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 public interface EventService {
@@ -15,4 +13,8 @@ public interface EventService {
     List<EventShortDto> getEventForUser(Long userId, Integer from, Integer size);
 
     EventFullDto findEventCreatedByUser(Long userId, Long eventId);
+
+    List<ParticipationRequestDto> getParticipationForUser(Long userId, Long eventId);
+
+    EventFullDto findPublishedEvent(Long id, HttpServletRequest request);
 }

@@ -4,12 +4,10 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.dto.EventFullDto;
-import ru.practicum.dto.EventShortDto;
-import ru.practicum.dto.NewEventDto;
-import ru.practicum.dto.UpdateEventUserRequestDto;
+import ru.practicum.dto.*;
 import ru.practicum.service.EventService;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
@@ -72,6 +70,32 @@ public class EventController {
     public EventFullDto findEventCreatedByUser(@PathVariable @PositiveOrZero Long userId,
                                                @PathVariable @PositiveOrZero Long eventId) {
         return eventService.findEventCreatedByUser(userId, eventId);
+    }
+
+    /**
+     * Получение информации о запросах на участие в событии текущего пользователя
+     * В случае, если по заданным фильтрам не найдено ни одной заявки, возвращает пустой список
+     */
+    @GetMapping("/users/{userId}/events/{eventId}/requests")
+    @ResponseStatus(HttpStatus.OK)
+    public List<ParticipationRequestDto> getParticipationForUser(@PathVariable @PositiveOrZero Long userId,
+                                                                 @PathVariable @PositiveOrZero Long eventId) {
+        return eventService.getParticipationForUser(userId, eventId);
+    }
+
+    /**
+     * Получение подробной информации об опубликованном событии по его идентификатору
+     * Обратите внимание:
+     * событие должно быть опубликовано
+     * информация о событии должна включать в себя количество просмотров и количество подтвержденных запросов
+     * информацию о том, что по этому эндпоинту был осуществлен и обработан запрос, нужно сохранить в сервисе статистики
+     * В случае, если события с заданным id не найдено, возвращает статус код 404
+     */
+    @GetMapping("/events/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public EventFullDto findPublishedEvent(@PathVariable @PositiveOrZero Long id,
+                                           HttpServletRequest request) {
+        return eventService.findPublishedEvent(id, request);
     }
 
 }

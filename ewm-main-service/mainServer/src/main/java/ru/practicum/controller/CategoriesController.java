@@ -62,4 +62,13 @@ public class CategoriesController {
         return categoriesService.patchCategory(categoryDto, catId);
     }
 
+    /**
+     * Удаление категории
+     * Обратите внимание: с категорией не должно быть связано ни одного события.
+     */
+    @DeleteMapping("/admin/categories/{catId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteCategory(@PathVariable @PositiveOrZero Long catId) {
+        categoriesService.deleteCategory(catId);
+    }
 }
