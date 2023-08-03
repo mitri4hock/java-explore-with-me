@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.client.StatisticModuleClient;
 import ru.practicum.dto.*;
 import ru.practicum.enums.EventRequestStatusEnum;
+import ru.practicum.enums.SortEnum;
 import ru.practicum.enums.StateActionEnum;
 import ru.practicum.enums.StateEnum;
 import ru.practicum.exception.ConflictException;
@@ -28,6 +29,7 @@ import ru.practicum.util.UtilClass;
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -239,7 +241,68 @@ public class EventServiceImpl implements EventService {
         return rez.stream()
                 .map(UtilitMapper::toParticipationRequestDto)
                 .collect(Collectors.toList());
+    }
 
+    @Override
+    public List<EventFullDto> findEventByAdmin(ArrayList<Long> users, ArrayList<String> states,
+                                               ArrayList<Long> categories, LocalDateTime rangeStart,
+                                               LocalDateTime rangeEnd, Integer from, Integer size) {
+        Sort sortBy = Sort.by(Sort.Order.asc("id"));
+        Pageable page = PageRequest.of(from / size, size, sortBy);
+        var statesEnum = states.stream()
+                .map(StateEnum::valueOf).collect(Collectors.toList());
 
+        var rez = eventStorage.findByInitiator_IdInAndStateInAndCategory_IdInAndEventDateBetween(users,
+                statesEnum, categories, rangeStart, rangeEnd, page);
+
+        return rez.stream()
+                .map(x -> UtilitMapper.toEventFullDto(x,
+                        eventRequestStorage.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED,
+                                x.getId()),
+                        statisticModuleClient.getCountViewsOfHit(String.join("", "/events/",
+                                x.getId().toString()))))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<EventShortDto> findEventByUser(String text, ArrayList<Long> categories, Boolean paid,
+                                               LocalDateTime rangeStart, LocalDateTime rangeEnd,
+                                               Boolean onlyAvailable, SortEnum sortEnum, Integer from, Integer size,
+                                               HttpServletRequest request) {
+        if (rangeStart.equals(LocalDateTime.parse("0001-01-01-01 01:01:01", dateTimeFormatter))) {
+            rangeStart = LocalDateTime.now();
+        }
+
+        Sort sortBy = Sort.by(Sort.Order.asc("eventDate"));
+        Pageable page = PageRequest.of(from / size, size, sortBy);
+        List<Event> rez = eventStorage.findEventsByUsers(text, text, categories, paid,
+                rangeStart, rangeEnd, StateEnum.PUBLISHED, page);
+        List<Event> preRez;
+        if (sortEnum.equals(SortEnum.VIEWS)) {
+            preRez = rez.stream()
+                    .sorted((x, y) -> {
+                        return statisticModuleClient.getCountViewsOfHit(String.join("", "/events/",
+                                x.getId().toString())).compareTo(statisticModuleClient.getCountViewsOfHit(String.join("",
+                                "/events/", y.getId().toString())));
+                    })
+                    .collect(Collectors.toList());
+        } else {
+            preRez = rez;
+        }
+        if (Boolean.TRUE.equals(onlyAvailable)) {
+            rez = preRez.stream().filter(x -> x.getParticipantLimit() > eventRequestStorage
+                            .countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED, x.getId()))
+                    .collect(Collectors.toList());
+        } else {
+            rez = preRez;
+        }
+        statisticModuleClient.postRequestToHit(request);
+        return rez.stream()
+                .map(x -> UtilitMapper.toEventShortDto(x,
+                        eventRequestStorage.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED,
+                                x.getId()),
+                        statisticModuleClient.getCountViewsOfHit(String.join("", "/events/",
+                                x.getId().toString()))))
+                .collect(Collectors.toList());
     }
 }

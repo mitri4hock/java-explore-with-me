@@ -4,7 +4,10 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.dto.EventFullDto;
+import ru.practicum.dto.EventRequestStatusUpdateRequestDto;
 import ru.practicum.dto.ParticipationRequestDto;
+import ru.practicum.dto.UpdateEventAdminRequestDto;
 import ru.practicum.service.RequestService;
 
 import javax.validation.constraints.PositiveOrZero;
@@ -54,4 +57,32 @@ public class RequestController {
         return requestService.findMyRequests(userId);
     }
 
+    /**
+     * Изменение статуса (подтверждена, отменена) заявок на участие в событии текущего пользователя
+     * Обратите внимание:     *
+     * если для события лимит заявок равен 0 или отключена пре-модерация заявок, то подтверждение заявок не требуется
+     * нельзя подтвердить заявку, если уже достигнут лимит по заявкам на данное событие (Ожидается код ошибки 409)
+     * статус можно изменить только у заявок, находящихся в состоянии ожидания (Ожидается код ошибки 409)
+     * если при подтверждении данной заявки, лимит заявок для события исчерпан, то все неподтверждённые заявки необходимо отклонить
+     */
+    @PatchMapping("/users/{userId}/events/{eventId}/requests")
+    @ResponseStatus(HttpStatus.OK)
+    public EventRequestStatusUpdateRequestDto patchRequestStatus(@PathVariable @PositiveOrZero Long userId,
+                                                                 @PathVariable @PositiveOrZero Long eventId) {
+        return requestService.patchRequestStatus(userId, eventId);
+    }
+
+    /**
+     * Редактирование данных события и его статуса (отклонение/публикация).
+     * Редактирование данных любого события администратором. Валидация данных не требуется. Обратите внимание:
+     * дата начала изменяемого события должна быть не ранее чем за час от даты публикации. (Ожидается код ошибки 409)
+     * событие можно публиковать, только если оно в состоянии ожидания публикации (Ожидается код ошибки 409)
+     * событие можно отклонить, только если оно еще не опубликовано (Ожидается код ошибки 409)
+     */
+    @PatchMapping("/admin/events/{eventId}")
+    @ResponseStatus(HttpStatus.OK)
+    public EventFullDto patchRequestByAdmin(@PathVariable @PositiveOrZero Long eventId,
+                                            @RequestBody UpdateEventAdminRequestDto updateEventAdminRequestDto) {
+        return requestService.patchRequestByAdmin(eventId, updateEventAdminRequestDto);
+    }
 }

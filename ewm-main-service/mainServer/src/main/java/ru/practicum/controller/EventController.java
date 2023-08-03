@@ -1,16 +1,22 @@
 package ru.practicum.controller;
 
 import lombok.AllArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.ConstantsUtil;
 import ru.practicum.dto.*;
+import ru.practicum.enums.SortEnum;
 import ru.practicum.service.EventService;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -98,4 +104,47 @@ public class EventController {
         return eventService.findPublishedEvent(id, request);
     }
 
+    /**
+     * Поиск событий
+     * Эндпоинт возвращает полную информацию обо всех событиях подходящих под переданные условия     *
+     * В случае, если по заданным фильтрам не найдено ни одного события, возвращает пустой список
+     */
+    @GetMapping("/admin/events")
+    @ResponseStatus(HttpStatus.OK)
+    public List<EventFullDto> findEventByAdmin(@RequestParam(value = "users") ArrayList<Long> users,
+                                               @RequestParam(value = "states") ArrayList<String> states,
+                                               @RequestParam(value = "categories") ArrayList<Long> categories,
+                                               @RequestParam(value = "rangeStart") @DateTimeFormat(pattern = ConstantsUtil.FORMAT_DATE) LocalDateTime rangeStart,
+                                               @RequestParam(value = "rangeEnd") @DateTimeFormat(pattern = ConstantsUtil.FORMAT_DATE) LocalDateTime rangeEnd,
+                                               @RequestParam(value = "from") @PositiveOrZero Integer from,
+                                               @RequestParam(value = "size") @Positive Integer size) {
+        return eventService.findEventByAdmin(users, states, categories, rangeStart, rangeEnd, from, size);
+    }
+
+    /**
+     * Получение событий с возможностью фильтрации
+     * Обратите внимание:
+     * это публичный эндпоинт, соответственно в выдаче должны быть только опубликованные события
+     * текстовый поиск (по аннотации и подробному описанию) должен быть без учета регистра букв
+     * если в запросе не указан диапазон дат [rangeStart-rangeEnd], то нужно выгружать события, которые произойдут позже текущей даты и времени
+     * информация о каждом событии должна включать в себя количество просмотров и количество уже одобренных заявок на участие
+     * информацию о том, что по этому эндпоинту был осуществлен и обработан запрос, нужно сохранить в сервисе статистики
+     * В случае, если по заданным фильтрам не найдено ни одного события, возвращает пустой список
+     */
+    @GetMapping("/events")
+    @ResponseStatus(HttpStatus.OK)
+    public List<EventShortDto> findEventByUser(@RequestParam(value = "text") @NotBlank String text,
+                                               @RequestParam(value = "categories") ArrayList<Long> categories,
+                                               @RequestParam(value = "paid") Boolean paid,
+                                               @RequestParam(value = "rangeStart", defaultValue = "0001-01-01-01 01:01:01") @DateTimeFormat(pattern = ConstantsUtil.FORMAT_DATE) LocalDateTime rangeStart,
+                                               @RequestParam(value = "rangeEnd", defaultValue = "9999-12-31 23:59:59") @DateTimeFormat(pattern = ConstantsUtil.FORMAT_DATE) LocalDateTime rangeEnd,
+                                               @RequestParam(value = "onlyAvailable") Boolean onlyAvailable,
+                                               @RequestParam(value = "sort") @NotBlank String sort,
+                                               @RequestParam(value = "from") @PositiveOrZero Integer from,
+                                               @RequestParam(value = "size") @Positive Integer size,
+                                               HttpServletRequest request) {
+        return eventService.findEventByUser(text, categories, paid, rangeStart, rangeEnd, onlyAvailable,
+                SortEnum.valueOf(sort), from, size, request);
+    }
 }
+

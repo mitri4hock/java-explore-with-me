@@ -1,19 +1,14 @@
 package ru.practicum.mapper;
 
 import lombok.experimental.UtilityClass;
-import ru.practicum.dto.EventFullDto;
-import ru.practicum.dto.EventShortDto;
-import ru.practicum.dto.NewEventDto;
-import ru.practicum.dto.ParticipationRequestDto;
+import ru.practicum.dto.*;
 import ru.practicum.enums.StateEnum;
-import ru.practicum.model.Category;
-import ru.practicum.model.Event;
-import ru.practicum.model.EventRequest;
-import ru.practicum.model.User;
+import ru.practicum.model.*;
 import ru.practicum.util.UtilClass;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @UtilityClass
 public class UtilitMapper {
@@ -92,6 +87,15 @@ public class UtilitMapper {
         rez.setRequester(eventRequest.getRequester().getId());
         rez.setStatus(eventRequest.getStatus().name());
 
+        return rez;
+    }
+
+    public CompilationDto toCompilationDto(Compilation compilation, List<EventShortDto> listEventShortDto) {
+        CompilationDto rez = new CompilationDto();
+        rez.setId(compilation.getId());
+        rez.setPinned(compilation.getPinned());
+        rez.setTitle(compilation.getTitle());
+        rez.setEvents(listEventShortDto);
         return rez;
     }
 }
