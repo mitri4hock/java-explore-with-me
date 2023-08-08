@@ -12,6 +12,7 @@ import ru.practicum.dto.UpdateEventAdminRequestDto;
 import ru.practicum.enums.EventRequestStatusEnum;
 import ru.practicum.enums.StateActionEnum;
 import ru.practicum.enums.StateEnum;
+import ru.practicum.exception.BadParametrException;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.ErrorDtoUtil;
 import ru.practicum.exception.NotFoundException;
@@ -67,7 +68,7 @@ public class RequestServiceImpl implements RequestService {
         }
         if (event.getParticipantLimit() != 0 &&
                 event.getParticipantLimit() == requestStorage.countByEvent_IdAndStatus(eventId,
-                        EventRequestStatusEnum.PENDING)) {
+                        EventRequestStatusEnum.CONFIRMED)) {
             log.info("Попытка подписки на событие c заполненным лимитом. EventId={}", eventId);
             throw new ConflictException("Попытка подписки на событие c заполненным лимитом.",
                     new ErrorDtoUtil("Incorrectly made request.", LocalDateTime.now()));
@@ -83,7 +84,7 @@ public class RequestServiceImpl implements RequestService {
         rez.setCreated(LocalDateTime.now());
         rez.setEvent(event);
         rez.setRequester(user);
-        if (event.getRequestModeration() == false) {
+        if (event.getRequestModeration() == false || event.getParticipantLimit() == 0) {
             rez.setStatus(EventRequestStatusEnum.CONFIRMED);
         } else {
             rez.setStatus(EventRequestStatusEnum.PENDING);
@@ -188,25 +189,6 @@ public class RequestServiceImpl implements RequestService {
                     " was not found"), new ErrorDtoUtil("The required object was not found.",
                     LocalDateTime.now()));
         });
-        if (LocalDateTime.parse(updateEventAdminRequestDto.getEventDate(), dateTimeFormatter)
-                .isBefore(event.getPublishedOn().plusHours(1L))) {
-            throw new ConflictException("событие начнётся меньше чем через 1 час после публикации",
-                    new ErrorDtoUtil("For the requested operation the conditions are not met.",
-                            LocalDateTime.now()));
-        }
-        if (updateEventAdminRequestDto.getStateAction().equals(StateActionEnum.PUBLISH_EVENT.toString()) &&
-                !event.getState().equals(StateEnum.PENDING)) {
-            throw new ConflictException("попытка публикации события, которое находится не на ожидании",
-                    new ErrorDtoUtil("For the requested operation the conditions are not met.",
-                            LocalDateTime.now()));
-        }
-        if (updateEventAdminRequestDto.getStateAction().equals(StateActionEnum.REJECT_EVENT.toString()) &&
-                event.getState().equals(StateEnum.PUBLISHED)) {
-            throw new ConflictException("попытка отклонения опубликованного события",
-                    new ErrorDtoUtil("For the requested operation the conditions are not met.",
-                            LocalDateTime.now()));
-        }
-
         if (updateEventAdminRequestDto.getAnnotation() != null) {
             event.setAnnotation(updateEventAdminRequestDto.getAnnotation());
         }
@@ -223,7 +205,14 @@ public class RequestServiceImpl implements RequestService {
             event.setDescription(updateEventAdminRequestDto.getDescription());
         }
         if (updateEventAdminRequestDto.getEventDate() != null) {
-            event.setEventDate(LocalDateTime.parse(updateEventAdminRequestDto.getEventDate(), dateTimeFormatter));
+            LocalDateTime parseTime = LocalDateTime.parse(updateEventAdminRequestDto.getEventDate(),
+                    dateTimeFormatter);
+            if (parseTime.isBefore(LocalDateTime.now().plusHours(1L))) {
+                throw new BadParametrException("событие начнётся меньше чем через 1 час после публикации",
+                        new ErrorDtoUtil("For the requested operation the conditions are not met.",
+                                LocalDateTime.now()));
+            }
+            event.setEventDate(parseTime);
         }
         if (updateEventAdminRequestDto.getLocation() != null) {
             event.setLocation(updateEventAdminRequestDto.getLocation());
@@ -234,17 +223,32 @@ public class RequestServiceImpl implements RequestService {
         if (updateEventAdminRequestDto.getParticipantLimit() != null) {
             event.setParticipantLimit(updateEventAdminRequestDto.getParticipantLimit());
         }
-        if (updateEventAdminRequestDto.getStateAction().equals(StateActionEnum.PUBLISH_EVENT.toString())) {
-            event.setState(StateEnum.PUBLISHED);
-        }
-        if (updateEventAdminRequestDto.getStateAction().equals(StateActionEnum.REJECT_EVENT.toString())) {
-            event.setState(StateEnum.CANCELED);
+        if (updateEventAdminRequestDto.getStateAction() != null) {
+            if (updateEventAdminRequestDto.getStateAction().equals(StateActionEnum.PUBLISH_EVENT.toString()) &&
+                    !event.getState().equals(StateEnum.PENDING)) {
+                throw new ConflictException("попытка публикации события, которое находится не на ожидании",
+                        new ErrorDtoUtil("For the requested operation the conditions are not met.",
+                                LocalDateTime.now()));
+            }
+            if (updateEventAdminRequestDto.getStateAction().equals(StateActionEnum.REJECT_EVENT.toString()) &&
+                    event.getState().equals(StateEnum.PUBLISHED)) {
+                throw new ConflictException("попытка отклонения опубликованного события",
+                        new ErrorDtoUtil("For the requested operation the conditions are not met.",
+                                LocalDateTime.now()));
+            }
+            if (updateEventAdminRequestDto.getStateAction().equals(StateActionEnum.PUBLISH_EVENT.toString())) {
+                event.setState(StateEnum.PUBLISHED);
+            }
+            if (updateEventAdminRequestDto.getStateAction().equals(StateActionEnum.REJECT_EVENT.toString())) {
+                event.setState(StateEnum.CANCELED);
+            }
         }
         if (updateEventAdminRequestDto.getTitle() != null) {
             event.setTitle(updateEventAdminRequestDto.getTitle());
         }
 
         eventStorage.save(event);
+        log.info("обновлено событие: {}", event);
         return UtilitMapper.toEventFullDto(event,
                 eventRequestStorage.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED, eventId),
                 statisticModuleClient.getCountViewsOfHit(String.join("", "/events/",

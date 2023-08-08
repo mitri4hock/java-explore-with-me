@@ -12,7 +12,6 @@ import ru.practicum.service.EventService;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 import java.time.LocalDateTime;
@@ -50,7 +49,7 @@ public class EventController {
     @ResponseStatus(HttpStatus.OK)
     public EventFullDto patchEvent(@PathVariable @PositiveOrZero Long userId,
                                    @PathVariable @PositiveOrZero Long eventId,
-                                   @RequestBody UpdateEventUserRequestDto updateEventUserRequestDto) {
+                                   @RequestBody @Valid UpdateEventUserRequestDto updateEventUserRequestDto) {
         return eventService.patchEvent(userId, eventId, updateEventUserRequestDto);
 
     }
@@ -116,8 +115,8 @@ public class EventController {
                                                @RequestParam(value = "categories") ArrayList<Long> categories,
                                                @RequestParam(value = "rangeStart") @DateTimeFormat(pattern = ConstantsUtil.FORMAT_DATE) LocalDateTime rangeStart,
                                                @RequestParam(value = "rangeEnd") @DateTimeFormat(pattern = ConstantsUtil.FORMAT_DATE) LocalDateTime rangeEnd,
-                                               @RequestParam(value = "from") @PositiveOrZero Integer from,
-                                               @RequestParam(value = "size") @Positive Integer size) {
+                                               @RequestParam(value = "from", defaultValue = "0") @PositiveOrZero Integer from,
+                                               @RequestParam(value = "size", defaultValue = "10") @Positive Integer size) {
         return eventService.findEventByAdmin(users, states, categories, rangeStart, rangeEnd, from, size);
     }
 
@@ -133,15 +132,15 @@ public class EventController {
      */
     @GetMapping("/events")
     @ResponseStatus(HttpStatus.OK)
-    public List<EventShortDto> findEventByUser(@RequestParam(value = "text") @NotBlank String text,
+    public List<EventShortDto> findEventByUser(@RequestParam(value = "text", defaultValue = " ") String text,
                                                @RequestParam(value = "categories") ArrayList<Long> categories,
-                                               @RequestParam(value = "paid") Boolean paid,
-                                               @RequestParam(value = "rangeStart", defaultValue = "0001-01-01-01 01:01:01") @DateTimeFormat(pattern = ConstantsUtil.FORMAT_DATE) LocalDateTime rangeStart,
+                                               @RequestParam(value = "paid", defaultValue = "false") Boolean paid,
+                                               @RequestParam(value = "rangeStart", defaultValue = "0001-01-01 01:01:01") @DateTimeFormat(pattern = ConstantsUtil.FORMAT_DATE) LocalDateTime rangeStart,
                                                @RequestParam(value = "rangeEnd", defaultValue = "9999-12-31 23:59:59") @DateTimeFormat(pattern = ConstantsUtil.FORMAT_DATE) LocalDateTime rangeEnd,
-                                               @RequestParam(value = "onlyAvailable") Boolean onlyAvailable,
-                                               @RequestParam(value = "sort") @NotBlank String sort,
-                                               @RequestParam(value = "from") @PositiveOrZero Integer from,
-                                               @RequestParam(value = "size") @Positive Integer size,
+                                               @RequestParam(value = "onlyAvailable", defaultValue = "false") Boolean onlyAvailable,
+                                               @RequestParam(value = "sort", defaultValue = "EVENT_DATE") String sort,
+                                               @RequestParam(value = "from", defaultValue = "0") @PositiveOrZero Integer from,
+                                               @RequestParam(value = "size", defaultValue = "10") @Positive Integer size,
                                                HttpServletRequest request) {
         return eventService.findEventByUser(text, categories, paid, rangeStart, rangeEnd, onlyAvailable,
                 SortEnum.valueOf(sort), from, size, request);

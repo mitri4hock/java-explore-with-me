@@ -10,6 +10,7 @@ import ru.practicum.dto.ParticipationRequestDto;
 import ru.practicum.dto.UpdateEventAdminRequestDto;
 import ru.practicum.service.RequestService;
 
+import javax.validation.Valid;
 import javax.validation.constraints.PositiveOrZero;
 import java.util.List;
 
@@ -82,7 +83,7 @@ public class RequestController {
     @PatchMapping("/admin/events/{eventId}")
     @ResponseStatus(HttpStatus.OK)
     public EventFullDto patchRequestByAdmin(@PathVariable @PositiveOrZero Long eventId,
-                                            @RequestBody UpdateEventAdminRequestDto updateEventAdminRequestDto) {
+                                            @RequestBody @Valid UpdateEventAdminRequestDto updateEventAdminRequestDto) {
         return requestService.patchRequestByAdmin(eventId, updateEventAdminRequestDto);
     }
 }

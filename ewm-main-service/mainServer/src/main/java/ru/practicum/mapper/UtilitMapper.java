@@ -24,9 +24,9 @@ public class UtilitMapper {
         result.setEventDate(LocalDateTime.parse(newEventDto.getEventDate(), dateTimeFormatter));
         result.setInitiator(initiator);
         result.setLocation(newEventDto.getLocation());
-        result.setPaid(newEventDto.getPaid());
-        result.setParticipantLimit(newEventDto.getParticipantLimit());
-        result.setRequestModeration(newEventDto.getRequestModeration());
+        result.setPaid(newEventDto.getPaid() == null ? false : newEventDto.getPaid());
+        result.setParticipantLimit(newEventDto.getParticipantLimit() == null ? 0 : newEventDto.getParticipantLimit());
+        result.setRequestModeration(newEventDto.getRequestModeration() == null ? true : newEventDto.getRequestModeration());
         result.setState(StateEnum.PENDING);
         result.setTitle(newEventDto.getTitle());
 

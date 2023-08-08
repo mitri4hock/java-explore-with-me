@@ -30,7 +30,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<UserDto> findUsers(Integer from, Integer size, ArrayList<Long> ids) {
-        Sort sortBy = Sort.by(Sort.Order.desc("id"));
+        Sort sortBy = Sort.by(Sort.Order.asc("id"));
         Pageable page = PageRequest.of(from / size, size, sortBy);
         Page<User> result;
         if (ids == null) {

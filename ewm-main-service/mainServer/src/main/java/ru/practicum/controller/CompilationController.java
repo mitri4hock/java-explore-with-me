@@ -23,7 +23,7 @@ public class CompilationController {
     /**
      * Добавление новой подборки (подборка может не содержать событий)
      */
-    @GetMapping("/admin/compilations")
+    @PostMapping("/admin/compilations")
     @ResponseStatus(HttpStatus.CREATED)
     public CompilationDto createCompilationByAdmin(@RequestBody @Validated NewCompilationDto newCompilationDto) {
         return compilationService.createCompilationByAdmin(newCompilationDto);

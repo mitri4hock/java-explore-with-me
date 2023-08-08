@@ -13,7 +13,7 @@ import ru.practicum.enums.EventRequestStatusEnum;
 import ru.practicum.enums.SortEnum;
 import ru.practicum.enums.StateActionEnum;
 import ru.practicum.enums.StateEnum;
-import ru.practicum.exception.ConflictException;
+import ru.practicum.exception.BadParametrException;
 import ru.practicum.exception.ErrorDtoUtil;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.mapper.UtilitMapper;
@@ -66,7 +66,7 @@ public class EventServiceImpl implements EventService {
                 .isBefore(LocalDateTime.now().plusHours(2))) {
             log.info("Попытка создать событие со временем старта неудовлетворяющем логике прилоения (сейчас + 2 часа)." +
                     " EventDate={}", newEventDto.getEventDate());
-            throw new ConflictException(String.join("", "Field: eventDate. Error: должно содержать" +
+            throw new BadParametrException(String.join("", "Field: eventDate. Error: должно содержать" +
                     " дату, которая еще не наступила. Value: ", newEventDto.getEventDate()),
                     new ErrorDtoUtil("For the requested operation the conditions are not met.",
                             LocalDateTime.now()));
@@ -97,7 +97,7 @@ public class EventServiceImpl implements EventService {
                         .isBefore(LocalDateTime.now().plusHours(2))) {
             log.info("Попытка обновить событие со временем старта неудовлетворяющем логике прилоения (сейчас + 2 часа)." +
                     " EventDate={}", updateEventUserRequestDto.getEventDate());
-            throw new ConflictException(String.join("", "Field: eventDate. Error: должно содержать" +
+            throw new BadParametrException(String.join("", "Field: eventDate. Error: должно содержать" +
                     " дату, которая еще не наступила. Value: ", updateEventUserRequestDto.getEventDate()),
                     new ErrorDtoUtil("For the requested operation the conditions are not met.",
                             LocalDateTime.now()));
@@ -208,12 +208,13 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public EventFullDto findPublishedEvent(Long id, HttpServletRequest request) {
-        var rez = eventStorage.findByIdAndState(id, StateEnum.PUBLISHED).orElseThrow(() -> {
-            log.info("Опубликованное событие не найдено. id={}", id);
-            throw new NotFoundException(String.join("", "User with id=", id.toString(),
-                    " was not found"), new ErrorDtoUtil("The required object was not found.",
-                    LocalDateTime.now()));
-        });
+        var rez = eventStorage.findByIdAndState(id, StateEnum.PUBLISHED)
+                .orElseThrow(() -> {
+                    log.info("Опубликованное событие не найдено. id={}", id);
+                    throw new NotFoundException(String.join("", "Published Event with id=", id.toString(),
+                            " was not found"), new ErrorDtoUtil("The required object was not found.",
+                            LocalDateTime.now()));
+                });
         statisticModuleClient.postRequestToHit(request);
         return UtilitMapper.toEventFullDto(rez,
                 eventRequestStorage.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED,
@@ -269,11 +270,15 @@ public class EventServiceImpl implements EventService {
                                                LocalDateTime rangeStart, LocalDateTime rangeEnd,
                                                Boolean onlyAvailable, SortEnum sortEnum, Integer from, Integer size,
                                                HttpServletRequest request) {
-        if (rangeStart.equals(LocalDateTime.parse("0001-01-01-01 01:01:01", dateTimeFormatter))) {
+        if (rangeStart.isEqual(LocalDateTime.parse("0001-01-01 01:01:01", dateTimeFormatter))) {
             rangeStart = LocalDateTime.now();
         }
-
-        Sort sortBy = Sort.by(Sort.Order.asc("eventDate"));
+        if (rangeStart.isAfter(rangeEnd)) {
+            throw new BadParametrException("RangeStart should not be after that rangeEnd", new ErrorDtoUtil(
+                    "The required object is bed", LocalDateTime.now())
+            );
+        }
+        Sort sortBy = Sort.by(Sort.Order.desc("eventDate"));
         Pageable page = PageRequest.of(from / size, size, sortBy);
         List<Event> rez = eventStorage.findEventsByUsers(text, text, categories, paid,
                 rangeStart, rangeEnd, StateEnum.PUBLISHED, page);
