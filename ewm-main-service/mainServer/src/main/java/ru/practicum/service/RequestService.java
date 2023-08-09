@@ -1,9 +1,6 @@
 package ru.practicum.service;
 
-import ru.practicum.dto.EventFullDto;
-import ru.practicum.dto.EventRequestStatusUpdateRequestDto;
-import ru.practicum.dto.ParticipationRequestDto;
-import ru.practicum.dto.UpdateEventAdminRequestDto;
+import ru.practicum.dto.*;
 
 import java.util.List;
 
@@ -14,7 +11,8 @@ public interface RequestService {
 
     List<ParticipationRequestDto> findMyRequests(Long userId);
 
-    EventRequestStatusUpdateRequestDto patchRequestStatus(Long userId, Long eventId);
+    EventRequestStatusUpdateResultDto patchRequestStatus(Long userId, Long eventId,
+                                                         EventRequestStatusUpdateRequestDto eventRequestStatusUpdateRequestDto);
 
     EventFullDto patchRequestByAdmin(Long eventId, UpdateEventAdminRequestDto updateEventAdminRequestDto);
 }

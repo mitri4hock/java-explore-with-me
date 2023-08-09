@@ -110,13 +110,14 @@ public class EventController {
      */
     @GetMapping("/admin/events")
     @ResponseStatus(HttpStatus.OK)
-    public List<EventFullDto> findEventByAdmin(@RequestParam(value = "users") ArrayList<Long> users,
-                                               @RequestParam(value = "states") ArrayList<String> states,
-                                               @RequestParam(value = "categories") ArrayList<Long> categories,
-                                               @RequestParam(value = "rangeStart") @DateTimeFormat(pattern = ConstantsUtil.FORMAT_DATE) LocalDateTime rangeStart,
-                                               @RequestParam(value = "rangeEnd") @DateTimeFormat(pattern = ConstantsUtil.FORMAT_DATE) LocalDateTime rangeEnd,
+    public List<EventFullDto> findEventByAdmin(@RequestParam(value = "users", required = false) ArrayList<Long> users,
+                                               @RequestParam(value = "states", required = false) ArrayList<String> states,
+                                               @RequestParam(value = "categories", required = false) ArrayList<Long> categories,
+                                               @RequestParam(value = "rangeStart", required = false) @DateTimeFormat(pattern = ConstantsUtil.FORMAT_DATE) LocalDateTime rangeStart,
+                                               @RequestParam(value = "rangeEnd", required = false) @DateTimeFormat(pattern = ConstantsUtil.FORMAT_DATE) LocalDateTime rangeEnd,
                                                @RequestParam(value = "from", defaultValue = "0") @PositiveOrZero Integer from,
                                                @RequestParam(value = "size", defaultValue = "10") @Positive Integer size) {
+
         return eventService.findEventByAdmin(users, states, categories, rangeStart, rangeEnd, from, size);
     }
 

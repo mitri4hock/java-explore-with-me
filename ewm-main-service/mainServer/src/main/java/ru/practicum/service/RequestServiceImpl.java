@@ -5,10 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.client.StatisticModuleClient;
-import ru.practicum.dto.EventFullDto;
-import ru.practicum.dto.EventRequestStatusUpdateRequestDto;
-import ru.practicum.dto.ParticipationRequestDto;
-import ru.practicum.dto.UpdateEventAdminRequestDto;
+import ru.practicum.dto.*;
 import ru.practicum.enums.EventRequestStatusEnum;
 import ru.practicum.enums.StateActionEnum;
 import ru.practicum.enums.StateEnum;
@@ -24,6 +21,7 @@ import ru.practicum.util.UtilClass;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -131,7 +129,8 @@ public class RequestServiceImpl implements RequestService {
 
     @Override
     @Transactional
-    public EventRequestStatusUpdateRequestDto patchRequestStatus(Long userId, Long eventId) {
+    public EventRequestStatusUpdateResultDto patchRequestStatus(Long userId, Long eventId,
+                                                                EventRequestStatusUpdateRequestDto eventRequestStatusUpdateRequestDto) {
         if (userStorage.findById(userId).isEmpty()) {
             log.info("запрошено изменение статуса бронирования для несуществующего пользователя с id={}", userId);
             throw new NotFoundException(String.join("", "User with id=", userId.toString(),
@@ -144,40 +143,71 @@ public class RequestServiceImpl implements RequestService {
                     " was not found"), new ErrorDtoUtil("The required object was not found.",
                     LocalDateTime.now()));
         });
-        EventRequest eventRequest = requestStorage.findByEvent_IdAndRequester_Id(eventId, userId)
-                .orElseThrow(() -> {
-                    log.info("запрошено изменение статуса бронирования несуществующего запроса");
-                    throw new NotFoundException(String.join("", "Request was not found"),
-                            new ErrorDtoUtil("The required object was not found.", LocalDateTime.now()));
-                });
+        if (event.getInitiator().getId() != userId) {
+            log.info("запрошено изменение статусов бронирования события не его создателем");
+            throw new BadParametrException("запрошено изменение статусов бронирования события не его создателем",
+                    new ErrorDtoUtil("Bad Param query",
+                            LocalDateTime.now()));
+        }
 
-        if (!eventRequest.getStatus().equals(EventRequestStatusEnum.PENDING)) {
-            throw new ConflictException("The participant limit has been reached",
-                    new ErrorDtoUtil("For the requested operation the conditions are not met.",
-                            LocalDateTime.now()));
-        }
-        long countOfConfirmed = requestStorage.countByEvent_IdAndStatus(eventId,
-                EventRequestStatusEnum.CONFIRMED);
-        if (event.getParticipantLimit() != 0 && countOfConfirmed >= event.getParticipantLimit()) {
-            throw new ConflictException("The participant limit has been reached",
-                    new ErrorDtoUtil("For the requested operation the conditions are not met.",
-                            LocalDateTime.now()));
-        }
-        if (event.getParticipantLimit().equals(0) || event.getRequestModeration().equals(false)) {
-            eventRequest.setStatus(EventRequestStatusEnum.CONFIRMED);
-        }
-        eventRequest.setStatus(EventRequestStatusEnum.CONFIRMED);
-        requestStorage.save(eventRequest);
-        if (event.getParticipantLimit() - 1 == countOfConfirmed) {
-            requestStorage.findByEvent_IdAndStatus(eventId, EventRequestStatusEnum.PENDING).stream()
-                    .forEach(x -> {
-                        x.setStatus(EventRequestStatusEnum.REJECTED);
-                        requestStorage.save(x);
+        EventRequestStatusUpdateResultDto rez = new EventRequestStatusUpdateResultDto(
+                new ArrayList<ParticipationRequestDto>(),
+                new ArrayList<ParticipationRequestDto>());
+        List<ParticipationRequestDto> unit = null;
+        for (Long requestId : eventRequestStatusUpdateRequestDto.getRequestIds()) {
+            EventRequest eventRequest = requestStorage.findByEvent_IdAndId(eventId, requestId)
+                    .orElseThrow(() -> {
+                        log.info("запрошено изменение статуса бронирования несуществующего запроса");
+                        throw new NotFoundException(String.join("", "Request was not found"),
+                                new ErrorDtoUtil("The required object was not found.", LocalDateTime.now()));
                     });
+            if (!eventRequest.getStatus().equals(EventRequestStatusEnum.PENDING)) {
+                throw new ConflictException("The participant limit has been reached",
+                        new ErrorDtoUtil("For the requested operation the conditions are not met.",
+                                LocalDateTime.now()));
+            }
+
+            switch (eventRequestStatusUpdateRequestDto.getStatus()) {
+                case CONFIRMED:
+                    long countOfConfirmed = requestStorage.countByEvent_IdAndStatus(eventId,
+                            EventRequestStatusEnum.CONFIRMED);
+                    if (event.getParticipantLimit() != 0 && countOfConfirmed >= event.getParticipantLimit()) {
+                        throw new ConflictException("The participant limit has been reached",
+                                new ErrorDtoUtil("For the requested operation the conditions are not met.",
+                                        LocalDateTime.now()));
+                    }
+                    if (event.getParticipantLimit().equals(0) || event.getRequestModeration().equals(false)) {
+                        eventRequest.setStatus(EventRequestStatusEnum.CONFIRMED);
+                    }
+                    eventRequest.setStatus(EventRequestStatusEnum.CONFIRMED);
+                    requestStorage.save(eventRequest);
+                    log.info("заявка подтверждена: {}", eventRequest);
+                    unit = rez.getConfirmedRequests();
+                    unit.add(UtilitMapper.toParticipationRequestDto(eventRequest));
+                    rez.setConfirmedRequests(unit);
+                    if (event.getParticipantLimit() - 1 == countOfConfirmed) {
+                        requestStorage.findByEvent_IdAndStatus(eventId, EventRequestStatusEnum.PENDING).stream()
+                                .forEach(x -> {
+                                    x.setStatus(EventRequestStatusEnum.REJECTED);
+                                    requestStorage.save(x);
+                                    log.info("заявка отклонена: {}", x);
+                                    var unitToDto = rez.getRejectedRequests();
+                                    unitToDto.add(UtilitMapper.toParticipationRequestDto(x));
+                                    rez.setRejectedRequests(unitToDto);
+                                });
+                    }
+                    break;
+                case REJECTED:
+                    eventRequest.setStatus(EventRequestStatusEnum.REJECTED);
+                    requestStorage.save(eventRequest);
+                    log.info("заявка отклонена: {}", eventRequest);
+                    unit = rez.getRejectedRequests();
+                    unit.add(UtilitMapper.toParticipationRequestDto(eventRequest));
+                    rez.setRejectedRequests(unit);
+                    break;
+            }
         }
-        return new EventRequestStatusUpdateRequestDto(requestStorage
-                .findByRequester_IdAndStatusOrderByEvent_IdAsc(userId, EventRequestStatusEnum.CONFIRMED),
-                EventRequestStatusEnum.CONFIRMED);
+        return rez;
     }
 
     @Override

@@ -4,10 +4,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.dto.EventFullDto;
-import ru.practicum.dto.EventRequestStatusUpdateRequestDto;
-import ru.practicum.dto.ParticipationRequestDto;
-import ru.practicum.dto.UpdateEventAdminRequestDto;
+import ru.practicum.dto.*;
 import ru.practicum.service.RequestService;
 
 import javax.validation.Valid;
@@ -49,16 +46,6 @@ public class RequestController {
     }
 
     /**
-     * Получение информации о заявках текущего пользователя на участие в чужих событиях
-     * В случае, если по заданным фильтрам не найдено ни одной заявки, возвращает пустой список
-     */
-    @GetMapping("/users/{userId}/requests")
-    @ResponseStatus(HttpStatus.OK)
-    public List<ParticipationRequestDto> findMyRequests(@PathVariable @PositiveOrZero Long userId) {
-        return requestService.findMyRequests(userId);
-    }
-
-    /**
      * Изменение статуса (подтверждена, отменена) заявок на участие в событии текущего пользователя
      * Обратите внимание:     *
      * если для события лимит заявок равен 0 или отключена пре-модерация заявок, то подтверждение заявок не требуется
@@ -68,9 +55,10 @@ public class RequestController {
      */
     @PatchMapping("/users/{userId}/events/{eventId}/requests")
     @ResponseStatus(HttpStatus.OK)
-    public EventRequestStatusUpdateRequestDto patchRequestStatus(@PathVariable @PositiveOrZero Long userId,
-                                                                 @PathVariable @PositiveOrZero Long eventId) {
-        return requestService.patchRequestStatus(userId, eventId);
+    public EventRequestStatusUpdateResultDto patchRequestStatus(@PathVariable @PositiveOrZero Long userId,
+                                                                @PathVariable @PositiveOrZero Long eventId,
+                                                                @RequestBody EventRequestStatusUpdateRequestDto eventRequestStatusUpdateRequestDto) {
+        return requestService.patchRequestStatus(userId, eventId, eventRequestStatusUpdateRequestDto);
     }
 
     /**
@@ -85,5 +73,15 @@ public class RequestController {
     public EventFullDto patchRequestByAdmin(@PathVariable @PositiveOrZero Long eventId,
                                             @RequestBody @Valid UpdateEventAdminRequestDto updateEventAdminRequestDto) {
         return requestService.patchRequestByAdmin(eventId, updateEventAdminRequestDto);
+    }
+
+    /**
+     * Получение информации о заявках текущего пользователя на участие в чужих событиях
+     * В случае, если по заданным фильтрам не найдено ни одной заявки, возвращает пустой список
+     */
+    @GetMapping("/users/{userId}/requests")
+    @ResponseStatus(HttpStatus.OK)
+    public List<ParticipationRequestDto> findMyRequests(@PathVariable @PositiveOrZero Long userId) {
+        return requestService.findMyRequests(userId);
     }
 }

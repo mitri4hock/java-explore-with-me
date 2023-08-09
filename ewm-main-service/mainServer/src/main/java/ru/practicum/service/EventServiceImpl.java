@@ -20,10 +20,7 @@ import ru.practicum.mapper.UtilitMapper;
 import ru.practicum.model.Category;
 import ru.practicum.model.Event;
 import ru.practicum.model.User;
-import ru.practicum.storage.CategoriesStorage;
-import ru.practicum.storage.EventRequestStorage;
-import ru.practicum.storage.EventStorage;
-import ru.practicum.storage.UserStorage;
+import ru.practicum.storage.*;
 import ru.practicum.util.UtilClass;
 
 import javax.servlet.http.HttpServletRequest;
@@ -44,6 +41,7 @@ public class EventServiceImpl implements EventService {
     private final CategoriesStorage categoriesStorage;
     private final EventRequestStorage eventRequestStorage;
     private final StatisticModuleClient statisticModuleClient;
+    private  final CustomStorage customStorage;
 
     private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(UtilClass.FORMAT_DATE);
 
@@ -250,10 +248,13 @@ public class EventServiceImpl implements EventService {
                                                LocalDateTime rangeEnd, Integer from, Integer size) {
         Sort sortBy = Sort.by(Sort.Order.asc("id"));
         Pageable page = PageRequest.of(from / size, size, sortBy);
-        var statesEnum = states.stream()
-                .map(StateEnum::valueOf).collect(Collectors.toList());
-
-        var rez = eventStorage.findByInitiator_IdInAndStateInAndCategory_IdInAndEventDateBetween(users,
+        List<StateEnum> statesEnum = null;
+        if (states != null) {
+            statesEnum = states.stream()
+                    .map(StateEnum::valueOf).collect(Collectors.toList());
+        }
+         //eventStorage
+        var rez = customStorage.customXZ(users,
                 statesEnum, categories, rangeStart, rangeEnd, page);
 
         return rez.stream()
