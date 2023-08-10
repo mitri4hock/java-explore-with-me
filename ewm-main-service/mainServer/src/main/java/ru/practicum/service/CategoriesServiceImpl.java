@@ -55,7 +55,7 @@ public class CategoriesServiceImpl implements CategoriesService {
                     new ErrorDtoUtil("The required object was not found.", LocalDateTime.now()));
         });
         var oldCategory = categoriesStorage.findByName(categoryDto.getName());
-        if (oldCategory.isPresent() && oldCategory.get().getId() != catId) {
+        if (oldCategory.isPresent() && !oldCategory.get().getId().equals(catId)) {
             log.info("попытка присвоения для статуса уже существующего имени. Name={}", categoryDto.getName());
             throw new ConflictException(String.join("", "That name=", categoryDto.getName(),
                     " already exists"),

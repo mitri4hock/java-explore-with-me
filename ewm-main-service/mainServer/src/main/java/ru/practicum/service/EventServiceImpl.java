@@ -192,7 +192,7 @@ public class EventServiceImpl implements EventService {
                     " was not found"), new ErrorDtoUtil("The required object was not found.",
                     LocalDateTime.now()));
         });
-        if (event.getInitiator().getId() != userId) {
+        if (!event.getInitiator().getId().equals(userId)) {
             log.info("Пользователем с Id={} запрошен просмотре не своего события с Id={}", userId, eventId);
             throw new NotFoundException(String.join("", "User with id=", userId.toString(),
                     " have not event with id=", eventId.toString()), new ErrorDtoUtil("The required object was not found.",

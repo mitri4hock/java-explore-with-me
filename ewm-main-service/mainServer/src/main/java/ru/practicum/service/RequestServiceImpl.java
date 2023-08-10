@@ -143,7 +143,7 @@ public class RequestServiceImpl implements RequestService {
                     " was not found"), new ErrorDtoUtil("The required object was not found.",
                     LocalDateTime.now()));
         });
-        if (event.getInitiator().getId() != userId) {
+        if (!event.getInitiator().getId().equals(userId)) {
             log.info("запрошено изменение статусов бронирования события не его создателем");
             throw new BadParametrException("запрошено изменение статусов бронирования события не его создателем",
                     new ErrorDtoUtil("Bad Param query",
