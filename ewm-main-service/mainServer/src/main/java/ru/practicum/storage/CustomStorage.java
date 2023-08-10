@@ -64,4 +64,47 @@ public class CustomStorage {
                 .setFirstResult(Long.valueOf(pageable.getOffset()).intValue());
         return query.getResultList();
     }
+
+    public List<Event> findEventsByUsers(String text, Collection<Long> categories, Boolean paid,
+                                         LocalDateTime eventDateStart, LocalDateTime eventDateEnd,
+                                         StateEnum state, Pageable pageable) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<Event> cq = cb.createQuery(Event.class);
+
+        Root<Event> event = cq.from(Event.class);
+        Predicate annotationPredicate = null;
+        Predicate descriptionPredicate = null;
+        Predicate categoryPredicate = null;
+        Predicate paidPredicate = null;
+        Predicate eventDatePredicate = null;
+        Predicate statePredicate = null;
+
+        if (text != null) {
+            annotationPredicate = cb.like(event.get("annotation"), "%" + text + "%");
+            descriptionPredicate = cb.like(event.get("description"), "%" + text + "%");
+        } else {
+            annotationPredicate = event.get("id").isNotNull();
+            descriptionPredicate = event.get("id").isNotNull();
+        }
+        Predicate likePredicate = cb.or(annotationPredicate, descriptionPredicate);
+        if (categories != null) {
+            categoryPredicate = event.get("category").get("id").in(categories);
+        } else {
+            categoryPredicate = event.get("id").isNotNull();
+        }
+        if (paid != null) {
+            paidPredicate = cb.equal(event.get("paid"), paid);
+        } else {
+            paidPredicate = event.get("id").isNotNull();
+        }
+        eventDatePredicate = cb.between(event.get("eventDate"), eventDateStart, eventDateEnd);
+        statePredicate = cb.equal(event.get("state"), state);
+
+        cq.where(likePredicate, categoryPredicate, paidPredicate,
+                eventDatePredicate, statePredicate);
+        TypedQuery<Event> query = em.createQuery(cq)
+                .setMaxResults(pageable.getPageSize())
+                .setFirstResult(Long.valueOf(pageable.getOffset()).intValue());
+        return query.getResultList();
+    }
 }

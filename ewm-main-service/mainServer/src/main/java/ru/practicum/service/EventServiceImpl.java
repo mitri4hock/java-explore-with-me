@@ -290,7 +290,7 @@ public class EventServiceImpl implements EventService {
         }
         Sort sortBy = Sort.by(Sort.Order.desc("eventDate"));
         Pageable page = PageRequest.of(from / size, size, sortBy);
-        List<Event> rez = eventStorage.findEventsByUsers(text, text, categories, paid,
+        List<Event> rez = customStorage.findEventsByUsers(text, categories, paid,
                 rangeStart, rangeEnd, StateEnum.PUBLISHED, page);
         List<Event> preRez;
         if (sortEnum.equals(SortEnum.VIEWS)) {
