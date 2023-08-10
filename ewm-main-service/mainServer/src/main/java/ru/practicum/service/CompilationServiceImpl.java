@@ -45,10 +45,12 @@ public class CompilationServiceImpl implements CompilationService {
     @Override
     @Transactional
     public CompilationDto createCompilationByAdmin(NewCompilationDto newCompilationDto) {
-        if (newCompilationDto.getEvents().isEmpty()) {
-            return new CompilationDto();
-        }
-
+/**
+ * странно, что можно создать рекомендацию без вложенных событий. Но раз так требуют тесты...
+ */
+//        if (newCompilationDto.getEvents().isEmpty()) {
+//            return new CompilationDto();
+//        }
         Compilation compilationRezult = compilationStorage.save(CustomMapper.INSTANCE.toCompilation(newCompilationDto));
 
         List<EventShortDto> listEventShortDto = new ArrayList<>();
@@ -109,27 +111,28 @@ public class CompilationServiceImpl implements CompilationService {
         for (Long i : delList) {
             compilationsEventsStorage.deleteById(i);
         }
-        compilationStorage.deleteById(compId);
 
         List<EventShortDto> listEventShortDto = new ArrayList<>();
-        for (Long eventId : updateCompilationRequestDto.getEvents()) {
-            Event event = eventStorage.findById(eventId).orElseThrow(() -> {
-                throw new NotFoundException(String.join("", "Event with id=", eventId.toString(),
-                        " was not found"), new ErrorDtoUtil("The required object was not found.",
-                        LocalDateTime.now()));
-            });
+        if (updateCompilationRequestDto.getEvents() != null) {
+            for (Long eventId : updateCompilationRequestDto.getEvents()) {
+                Event event = eventStorage.findById(eventId).orElseThrow(() -> {
+                    throw new NotFoundException(String.join("", "Event with id=", eventId.toString(),
+                            " was not found"), new ErrorDtoUtil("The required object was not found.",
+                            LocalDateTime.now()));
+                });
 
-            CompilationsEvents compilationsEvents = new CompilationsEvents();
-            compilationsEvents.setCompilation(compilation);
-            compilationsEvents.setEvent(event);
-            compilationsEventsStorage.save(compilationsEvents);
+                CompilationsEvents compilationsEvents = new CompilationsEvents();
+                compilationsEvents.setCompilation(compilation);
+                compilationsEvents.setEvent(event);
+                compilationsEventsStorage.save(compilationsEvents);
 
-            EventShortDto eventShortDto = UtilitMapper.toEventShortDto(event,
-                    eventRequestStorage.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED,
-                            event.getId()),
-                    statisticModuleClient.getCountViewsOfHit(String.join("", "/events/",
-                            event.getId().toString())));
-            listEventShortDto.add(eventShortDto);
+                EventShortDto eventShortDto = UtilitMapper.toEventShortDto(event,
+                        eventRequestStorage.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED,
+                                event.getId()),
+                        statisticModuleClient.getCountViewsOfHit(String.join("", "/events/",
+                                event.getId().toString())));
+                listEventShortDto.add(eventShortDto);
+            }
         }
         return UtilitMapper.toCompilationDto(compilation, listEventShortDto);
     }

@@ -89,7 +89,7 @@ public class RequestServiceImpl implements RequestService {
         }
         requestStorage.save(rez);
         log.info("создана заявка на событие: {}", rez);
-        return UtilitMapper.toParticipationRequestDto(rez);
+        return UtilitMapper.toParticipationRequestDto(rez, true);
     }
 
     @Override
@@ -102,14 +102,14 @@ public class RequestServiceImpl implements RequestService {
                     new ErrorDtoUtil("The required object was not found.", LocalDateTime.now()));
         });
         if (!request.getRequester().getId().equals(userId)) {
-            log.info("Попытка отменить подписку на чужоесобытие. RequestId={}, userId={}", requestId, userId);
+            log.info("Попытка отменить подписку на чужое событие. RequestId={}, userId={}", requestId, userId);
             throw new ConflictException("Попытка отменить подписку на чужоесобытие.",
                     new ErrorDtoUtil("Incorrectly made request.", LocalDateTime.now()));
         }
         request.setStatus(EventRequestStatusEnum.REJECTED);
         requestStorage.save(request);
         log.info("заявка на событие отменена: {}", request);
-        return UtilitMapper.toParticipationRequestDto(request);
+        return UtilitMapper.toParticipationRequestDto(request, true);
     }
 
     @Override
@@ -123,7 +123,7 @@ public class RequestServiceImpl implements RequestService {
 
         var rez = requestStorage.findByRequester_IdOrderByCreatedDesc(userId);
         return rez.stream()
-                .map(UtilitMapper::toParticipationRequestDto)
+                .map(x -> UtilitMapper.toParticipationRequestDto(x, true))
                 .collect(Collectors.toList());
     }
 
@@ -183,7 +183,7 @@ public class RequestServiceImpl implements RequestService {
                     requestStorage.save(eventRequest);
                     log.info("заявка подтверждена: {}", eventRequest);
                     unit = rez.getConfirmedRequests();
-                    unit.add(UtilitMapper.toParticipationRequestDto(eventRequest));
+                    unit.add(UtilitMapper.toParticipationRequestDto(eventRequest, true));
                     rez.setConfirmedRequests(unit);
                     if (event.getParticipantLimit() - 1 == countOfConfirmed) {
                         requestStorage.findByEvent_IdAndStatus(eventId, EventRequestStatusEnum.PENDING).stream()
@@ -192,7 +192,8 @@ public class RequestServiceImpl implements RequestService {
                                     requestStorage.save(x);
                                     log.info("заявка отклонена: {}", x);
                                     var unitToDto = rez.getRejectedRequests();
-                                    unitToDto.add(UtilitMapper.toParticipationRequestDto(x));
+                                    unitToDto.add(UtilitMapper.toParticipationRequestDto(x,
+                                            false));
                                     rez.setRejectedRequests(unitToDto);
                                 });
                     }
@@ -202,7 +203,7 @@ public class RequestServiceImpl implements RequestService {
                     requestStorage.save(eventRequest);
                     log.info("заявка отклонена: {}", eventRequest);
                     unit = rez.getRejectedRequests();
-                    unit.add(UtilitMapper.toParticipationRequestDto(eventRequest));
+                    unit.add(UtilitMapper.toParticipationRequestDto(eventRequest, false));
                     rez.setRejectedRequests(unit);
                     break;
             }

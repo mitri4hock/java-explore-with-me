@@ -133,9 +133,9 @@ public class EventController {
      */
     @GetMapping("/events")
     @ResponseStatus(HttpStatus.OK)
-    public List<EventShortDto> findEventByUser(@RequestParam(value = "text", defaultValue = " ") String text,
-                                               @RequestParam(value = "categories") ArrayList<Long> categories,
-                                               @RequestParam(value = "paid", defaultValue = "false") Boolean paid,
+    public List<EventShortDto> findEventByUser(@RequestParam(value = "text", required = false) String text,
+                                               @RequestParam(value = "categories", required = false) ArrayList<Long> categories,
+                                               @RequestParam(value = "paid", required = false) Boolean paid,
                                                @RequestParam(value = "rangeStart", defaultValue = "0001-01-01 01:01:01") @DateTimeFormat(pattern = ConstantsUtil.FORMAT_DATE) LocalDateTime rangeStart,
                                                @RequestParam(value = "rangeEnd", defaultValue = "9999-12-31 23:59:59") @DateTimeFormat(pattern = ConstantsUtil.FORMAT_DATE) LocalDateTime rangeEnd,
                                                @RequestParam(value = "onlyAvailable", defaultValue = "false") Boolean onlyAvailable,

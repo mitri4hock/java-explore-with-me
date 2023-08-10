@@ -9,6 +9,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.dto.UserDto;
+import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.ErrorDtoUtil;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.mapper.CustomMapper;
@@ -47,6 +48,13 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserDto createUser(UserDto userDto) {
+        if (userStorage.findByName(userDto.getName()).isPresent()) {
+            String msg = String.join("",
+                    "Запрошено создание нового Пользователя с уже сузествующим именем: ", userDto.getName());
+            log.info(msg);
+            throw new ConflictException(msg, new ErrorDtoUtil("Name already exist",
+                    LocalDateTime.now()));
+        }
         User newUser = CustomMapper.INSTANCE.toUser(userDto);
         userStorage.save(newUser);
         log.info("создан новый пользователь: {}", newUser.toString());

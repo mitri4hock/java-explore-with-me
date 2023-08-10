@@ -32,6 +32,13 @@ public class CategoriesServiceImpl implements CategoriesService {
     @Override
     @Transactional
     public CategoryDto createCategory(CategoryDto categoryDto) {
+        if (categoriesStorage.findByName(categoryDto.getName()).isPresent()) {
+            String msg = String.join("",
+                    "Запрошено создание новой категории с уже сузествующим именем: ", categoryDto.getName());
+            log.info(msg);
+            throw new ConflictException(msg, new ErrorDtoUtil("Name already exist",
+                    LocalDateTime.now()));
+        }
         Category newCategory = CustomMapper.INSTANCE.toCategory(categoryDto);
         categoriesStorage.save(newCategory);
         log.info("создана новая категория: {}", newCategory.toString());
@@ -50,7 +57,7 @@ public class CategoriesServiceImpl implements CategoriesService {
         var oldCategory = categoriesStorage.findByName(categoryDto.getName());
         if (oldCategory.isPresent() && oldCategory.get().getId() != catId) {
             log.info("попытка присвоения для статуса уже существующего имени. Name={}", categoryDto.getName());
-            throw new NotFoundException(String.join("", "That name=", categoryDto.getName(),
+            throw new ConflictException(String.join("", "That name=", categoryDto.getName(),
                     " already exists"),
                     new ErrorDtoUtil("The required object already exists.", LocalDateTime.now()));
         }
@@ -81,6 +88,7 @@ public class CategoriesServiceImpl implements CategoriesService {
     }
 
     @Override
+    @Transactional
     public void deleteCategory(Long catId) {
         if (categoriesStorage.findById(catId).isEmpty()) {
             log.info("Запрошено удаление несуществующей категории. id={}", catId);
@@ -94,7 +102,7 @@ public class CategoriesServiceImpl implements CategoriesService {
                     new ErrorDtoUtil("For the requested operation the conditions are not met.",
                             LocalDateTime.now()));
         }
-        categoriesStorage.deleteById(catId);
-        log.info("категория с id={} удалена", catId);
+        var delEntity = categoriesStorage.removeById(catId);
+        log.info("категория удалена: {}", delEntity);
     }
 }

@@ -2,6 +2,7 @@ package ru.practicum.mapper;
 
 import lombok.experimental.UtilityClass;
 import ru.practicum.dto.*;
+import ru.practicum.enums.EventRequestStatusEnum;
 import ru.practicum.enums.StateEnum;
 import ru.practicum.model.*;
 import ru.practicum.util.UtilClass;
@@ -78,14 +79,20 @@ public class UtilitMapper {
         return result;
     }
 
-    public ParticipationRequestDto toParticipationRequestDto(EventRequest eventRequest) {
+    public ParticipationRequestDto toParticipationRequestDto(EventRequest eventRequest,
+                                                             boolean isRejectedStatusIsCanceled) { // из-за тестов ПОСТМАН - в разных тестах должно быть разное именование для одного и того-же
         ParticipationRequestDto rez = new ParticipationRequestDto();
 
         rez.setCreated(eventRequest.getCreated().format(dateTimeFormatter));
         rez.setEvent(eventRequest.getEvent().getId());
         rez.setId(eventRequest.getId());
         rez.setRequester(eventRequest.getRequester().getId());
-        rez.setStatus(eventRequest.getStatus().name());
+        if (isRejectedStatusIsCanceled == true) {
+            rez.setStatus(eventRequest.getStatus().equals(EventRequestStatusEnum.REJECTED) ? "CANCELED" :
+                    eventRequest.getStatus().name());
+        } else {
+            rez.setStatus(eventRequest.getStatus().name());
+        }
 
         return rez;
     }

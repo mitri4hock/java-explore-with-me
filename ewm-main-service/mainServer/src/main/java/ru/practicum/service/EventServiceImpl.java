@@ -14,6 +14,7 @@ import ru.practicum.enums.SortEnum;
 import ru.practicum.enums.StateActionEnum;
 import ru.practicum.enums.StateEnum;
 import ru.practicum.exception.BadParametrException;
+import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.ErrorDtoUtil;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.mapper.UtilitMapper;
@@ -41,7 +42,7 @@ public class EventServiceImpl implements EventService {
     private final CategoriesStorage categoriesStorage;
     private final EventRequestStorage eventRequestStorage;
     private final StatisticModuleClient statisticModuleClient;
-    private  final CustomStorage customStorage;
+    private final CustomStorage customStorage;
 
     private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(UtilClass.FORMAT_DATE);
 
@@ -87,7 +88,7 @@ public class EventServiceImpl implements EventService {
         Event event = eventStorage.findById(eventId).orElseThrow(() -> {
             log.info("запрошено изменение несуществующего события с id={}", eventId);
             throw new NotFoundException(String.join("", "Event with id=", eventId.toString(),
-                    " was not found"), new ErrorDtoUtil("The required object was not found.",
+                    " was not found"), new ErrorDtoUtil("fThe required object was not found.",
                     LocalDateTime.now()));
         });
         if (updateEventUserRequestDto.getEventDate() != null &&
@@ -150,7 +151,7 @@ public class EventServiceImpl implements EventService {
         } else {
             log.info("запрошено изменение события находящегося не на ожидании модерации и не отменённое. id={}",
                     eventId);
-            throw new NotFoundException("Only pending or canceled events can be changed",
+            throw new ConflictException("Only pending or canceled events can be changed",
                     new ErrorDtoUtil("For the requested operation the conditions are not met.",
                             LocalDateTime.now()));
         }
@@ -229,16 +230,24 @@ public class EventServiceImpl implements EventService {
                     " was not found"), new ErrorDtoUtil("The required object was not found.",
                     LocalDateTime.now()));
         }
-        if (eventStorage.findById(eventId).isEmpty()) {
+        var event = eventStorage.findById(eventId);
+        if (event.isEmpty()) {
             log.info("запрошено наличие заявки в несуществующее событие с id={}", eventId);
             throw new NotFoundException(String.join("", "Event with id=", eventId.toString(),
                     " was not found"), new ErrorDtoUtil("The required object was not found.",
                     LocalDateTime.now()));
         }
-        var rez = eventRequestStorage.findByRequester_IdAndEvent_IdOrderByCreatedDesc(userId,
-                eventId);
+        if (!event.get().getInitiator().getId().equals(userId)) {
+            log.info("запрошено наличие заявки в не своём событие с id={}", eventId);
+            throw new ConflictException(String.join("", "Event with id=", eventId.toString(),
+                    " do not belong User with id=", userId.toString()),
+                    new ErrorDtoUtil("conflict parameters",
+                            LocalDateTime.now()));
+        }
+        var rez = eventRequestStorage.findByEvent_IdAndEvent_Initiator_IdOrderByCreatedDesc(
+                eventId, userId);
         return rez.stream()
-                .map(UtilitMapper::toParticipationRequestDto)
+                .map(x -> UtilitMapper.toParticipationRequestDto(x, true))
                 .collect(Collectors.toList());
     }
 
@@ -253,8 +262,8 @@ public class EventServiceImpl implements EventService {
             statesEnum = states.stream()
                     .map(StateEnum::valueOf).collect(Collectors.toList());
         }
-         //eventStorage
-        var rez = customStorage.customXZ(users,
+        //eventStorage
+        var rez = customStorage.findEventByFilters(users,
                 statesEnum, categories, rangeStart, rangeEnd, page);
 
         return rez.stream()

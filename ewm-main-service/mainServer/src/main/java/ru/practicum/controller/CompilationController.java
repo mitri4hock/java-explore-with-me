@@ -9,6 +9,7 @@ import ru.practicum.dto.NewCompilationDto;
 import ru.practicum.dto.UpdateCompilationRequestDto;
 import ru.practicum.service.CompilationService;
 
+import javax.validation.Valid;
 import javax.validation.constraints.PositiveOrZero;
 import java.util.List;
 
@@ -25,8 +26,18 @@ public class CompilationController {
      */
     @PostMapping("/admin/compilations")
     @ResponseStatus(HttpStatus.CREATED)
-    public CompilationDto createCompilationByAdmin(@RequestBody @Validated NewCompilationDto newCompilationDto) {
+    public CompilationDto createCompilationByAdmin(@RequestBody @Valid NewCompilationDto newCompilationDto) {
         return compilationService.createCompilationByAdmin(newCompilationDto);
+    }
+
+    /**
+     * Обновить информацию о подборке
+     */
+    @PatchMapping("/admin/compilations/{compId}")
+    @ResponseStatus(HttpStatus.OK)
+    public CompilationDto patchCompilationByAdmin(@PathVariable @PositiveOrZero Long compId,
+                                                  @RequestBody @Valid UpdateCompilationRequestDto updateCompilationRequestDto) {
+        return compilationService.patchCompilationByAdmin(compId, updateCompilationRequestDto);
     }
 
     /**
@@ -36,16 +47,6 @@ public class CompilationController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteCompilation(@PathVariable @PositiveOrZero Long compId) {
         compilationService.deleteCompilation(compId);
-    }
-
-    /**
-     * Обновить информацию о подборке
-     */
-    @PatchMapping("/admin/compilations/{compId}")
-    @ResponseStatus(HttpStatus.OK)
-    public CompilationDto patchCompilationByAdmin(@PathVariable @PositiveOrZero Long compId,
-                                                  @RequestBody UpdateCompilationRequestDto updateCompilationRequestDto) {
-        return compilationService.patchCompilationByAdmin(compId, updateCompilationRequestDto);
     }
 
     /**
@@ -64,7 +65,7 @@ public class CompilationController {
      */
     @GetMapping("/compilations")
     @ResponseStatus(HttpStatus.OK)
-    public List<CompilationDto> findCompilation(@RequestParam(value = "pinned") Boolean pinned,
+    public List<CompilationDto> findCompilation(@RequestParam(value = "pinned", required = false) Boolean pinned,
                                                 @RequestParam(value = "from", defaultValue = "0") Integer from,
                                                 @RequestParam(value = "size", defaultValue = "10") Integer size) {
         return compilationService.findCompilation(pinned, from, size);

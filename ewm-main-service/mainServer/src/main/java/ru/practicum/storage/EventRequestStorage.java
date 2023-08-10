@@ -12,5 +12,5 @@ public interface EventRequestStorage extends JpaRepository<EventRequest, Long> {
 
     long countByStatusAndEvent_Id(EventRequestStatusEnum status, Long id);
 
-    List<EventRequest> findByRequester_IdAndEvent_IdOrderByCreatedDesc(Long userId, Long eventId);
+    List<EventRequest> findByEvent_IdAndEvent_Initiator_IdOrderByCreatedDesc(Long eventId, Long inicializatorId);
 }

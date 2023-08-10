@@ -23,6 +23,9 @@ public interface UserStorage extends JpaRepository<User, Long> {
     @Override
     Optional<User> findById(Long aLong);
 
+    Optional<User> findByName(String name);
+
+
     @Override
     void deleteById(Long aLong);
 }

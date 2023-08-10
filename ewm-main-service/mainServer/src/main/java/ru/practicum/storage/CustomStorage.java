@@ -23,12 +23,12 @@ public class CustomStorage {
         this.em = em;
     }
 
-    public List<Event> customXZ(Collection<Long> ids,
-                                Collection<StateEnum> states,
-                                Collection<Long> ids1,
-                                LocalDateTime eventDateStart,
-                                LocalDateTime eventDateEnd,
-                                Pageable pageable) {
+    public List<Event> findEventByFilters(Collection<Long> ids,
+                                          Collection<StateEnum> states,
+                                          Collection<Long> ids1,
+                                          LocalDateTime eventDateStart,
+                                          LocalDateTime eventDateEnd,
+                                          Pageable pageable) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<Event> cq = cb.createQuery(Event.class);
 
