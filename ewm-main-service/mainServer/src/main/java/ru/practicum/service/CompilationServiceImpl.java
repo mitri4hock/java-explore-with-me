@@ -16,14 +16,13 @@ import ru.practicum.enums.EventRequestStatusEnum;
 import ru.practicum.exception.ErrorDtoUtil;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.mapper.CustomMapper;
-import ru.practicum.mapper.UtilitMapper;
 import ru.practicum.model.Compilation;
 import ru.practicum.model.CompilationsEvents;
 import ru.practicum.model.Event;
-import ru.practicum.storage.CompilationStorage;
-import ru.practicum.storage.CompilationsEventsStorage;
-import ru.practicum.storage.EventRequestStorage;
-import ru.practicum.storage.EventStorage;
+import ru.practicum.storage.CompilationRepository;
+import ru.practicum.storage.CompilationsEventsRepository;
+import ru.practicum.storage.EventRequestRepository;
+import ru.practicum.storage.EventRepository;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -35,21 +34,21 @@ import java.util.List;
 @AllArgsConstructor
 public class CompilationServiceImpl implements CompilationService {
 
-    private final CompilationStorage compilationStorage;
-    private final EventStorage eventStorage;
-    private final EventRequestStorage eventRequestStorage;
+    private final CompilationRepository compilationRepository;
+    private final EventRepository eventRepository;
+    private final EventRequestRepository eventRequestRepository;
     private final StatisticModuleClient statisticModuleClient;
-    private final CompilationsEventsStorage compilationsEventsStorage;
+    private final CompilationsEventsRepository compilationsEventsRepository;
 
 
     @Override
     @Transactional
     public CompilationDto createCompilationByAdmin(NewCompilationDto newCompilationDto) {
-        Compilation compilationRezult = compilationStorage.save(CustomMapper.INSTANCE.toCompilation(newCompilationDto));
+        Compilation compilationRezult = compilationRepository.save(CustomMapper.INSTANCE.toCompilation(newCompilationDto));
 
         List<EventShortDto> listEventShortDto = new ArrayList<>();
         for (Long eventId : newCompilationDto.getEvents()) {
-            Event event = eventStorage.findById(eventId).orElseThrow(() -> {
+            Event event = eventRepository.findById(eventId).orElseThrow(() -> {
                 throw new NotFoundException(String.join("", "Event with id=", eventId.toString(),
                         " was not found"), new ErrorDtoUtil("The required object was not found.",
                         LocalDateTime.now()));
@@ -58,10 +57,10 @@ public class CompilationServiceImpl implements CompilationService {
             CompilationsEvents compilationsEvents = new CompilationsEvents();
             compilationsEvents.setCompilation(compilationRezult);
             compilationsEvents.setEvent(event);
-            compilationsEventsStorage.save(compilationsEvents);
+            compilationsEventsRepository.save(compilationsEvents);
 
             EventShortDto eventShortDto = CustomMapper.INSTANCE.toEventShortDto(event,
-                    eventRequestStorage.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED,
+                    eventRequestRepository.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED,
                             event.getId()),
                     statisticModuleClient.getCountViewsOfHit(String.join("", "/events/",
                             event.getId().toString())));
@@ -73,22 +72,22 @@ public class CompilationServiceImpl implements CompilationService {
     @Override
     @Transactional
     public void deleteCompilation(Long compId) {
-        if (compilationStorage.findById(compId).isEmpty()) {
+        if (compilationRepository.findById(compId).isEmpty()) {
             throw new NotFoundException(String.join("", "Compilation with id=", compId.toString(),
                     " was not found"), new ErrorDtoUtil("The required object was not found.",
                     LocalDateTime.now()));
         }
-        var delList = compilationsEventsStorage.findByCompilation_Id(compId);
+        var delList = compilationsEventsRepository.findByCompilation_Id(compId);
         for (Long i : delList) {
-            compilationsEventsStorage.deleteById(i);
+            compilationsEventsRepository.deleteById(i);
         }
-        compilationStorage.deleteById(compId);
+        compilationRepository.deleteById(compId);
     }
 
     @Override
     @Transactional
     public CompilationDto patchCompilationByAdmin(Long compId, UpdateCompilationRequestDto updateCompilationRequestDto) {
-        var compilation = compilationStorage.findById(compId).orElseThrow(() -> {
+        var compilation = compilationRepository.findById(compId).orElseThrow(() -> {
             throw new NotFoundException(String.join("", "Compilation with id=", compId.toString(),
                     " was not found"), new ErrorDtoUtil("The required object was not found.",
                     LocalDateTime.now()));
@@ -101,15 +100,15 @@ public class CompilationServiceImpl implements CompilationService {
         }
         //compilationStorage.save(compilation);
 
-        var delList = compilationsEventsStorage.findByCompilation_Id(compId);
+        var delList = compilationsEventsRepository.findByCompilation_Id(compId);
         for (Long i : delList) {
-            compilationsEventsStorage.deleteById(i);
+            compilationsEventsRepository.deleteById(i);
         }
 
         List<EventShortDto> listEventShortDto = new ArrayList<>();
         if (updateCompilationRequestDto.getEvents() != null) {
             for (Long eventId : updateCompilationRequestDto.getEvents()) {
-                Event event = eventStorage.findById(eventId).orElseThrow(() -> {
+                Event event = eventRepository.findById(eventId).orElseThrow(() -> {
                     throw new NotFoundException(String.join("", "Event with id=", eventId.toString(),
                             " was not found"), new ErrorDtoUtil("The required object was not found.",
                             LocalDateTime.now()));
@@ -118,10 +117,10 @@ public class CompilationServiceImpl implements CompilationService {
                 CompilationsEvents compilationsEvents = new CompilationsEvents();
                 compilationsEvents.setCompilation(compilation);
                 compilationsEvents.setEvent(event);
-                compilationsEventsStorage.save(compilationsEvents);
+                compilationsEventsRepository.save(compilationsEvents);
 
                 EventShortDto eventShortDto = CustomMapper.INSTANCE.toEventShortDto(event,
-                        eventRequestStorage.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED,
+                        eventRequestRepository.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED,
                                 event.getId()),
                         statisticModuleClient.getCountViewsOfHit(String.join("", "/events/",
                                 event.getId().toString())));
@@ -133,23 +132,23 @@ public class CompilationServiceImpl implements CompilationService {
 
     @Override
     public CompilationDto findCompilationById(Long compId) {
-        var compilation = compilationStorage.findById(compId).orElseThrow(() -> {
+        var compilation = compilationRepository.findById(compId).orElseThrow(() -> {
             throw new NotFoundException(String.join("", "Compilation with id=", compId.toString(),
                     " was not found"), new ErrorDtoUtil("The required object was not found.",
                     LocalDateTime.now()));
         });
 
-        var findList = compilationsEventsStorage.findEventIdByCompilation_Id(compId);
+        var findList = compilationsEventsRepository.findEventIdByCompilation_Id(compId);
         List<EventShortDto> listEventShortDto = new ArrayList<>();
         for (Long eventId : findList) {
-            Event event = eventStorage.findById(eventId).orElseThrow(() -> {
+            Event event = eventRepository.findById(eventId).orElseThrow(() -> {
                 throw new NotFoundException(String.join("", "Event with id=", eventId.toString(),
                         " was not found"), new ErrorDtoUtil("The required object was not found.",
                         LocalDateTime.now()));
             });
 
             EventShortDto eventShortDto = CustomMapper.INSTANCE.toEventShortDto(event,
-                    eventRequestStorage.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED,
+                    eventRequestRepository.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED,
                             event.getId()),
                     statisticModuleClient.getCountViewsOfHit(String.join("", "/events/",
                             event.getId().toString())));
@@ -164,24 +163,24 @@ public class CompilationServiceImpl implements CompilationService {
         Sort sortBy = Sort.by(Sort.Order.asc("id"));
         Pageable page = PageRequest.of(from / size, size, sortBy);
 
-        var comList = compilationStorage.findByPinned(pinned, page);
+        var comList = compilationRepository.findByPinned(pinned, page);
         if (comList.isEmpty()) {
             return new ArrayList<>();
         }
 
         List<CompilationDto> rez = new ArrayList<>();
         for (Compilation compilation : comList) {
-            var findList = compilationsEventsStorage.findEventIdByCompilation_Id(compilation.getId());
+            var findList = compilationsEventsRepository.findEventIdByCompilation_Id(compilation.getId());
             List<EventShortDto> listEventShortDto = new ArrayList<>();
             for (Long eventId : findList) {
-                Event event = eventStorage.findById(eventId).orElseThrow(() -> {
+                Event event = eventRepository.findById(eventId).orElseThrow(() -> {
                     throw new NotFoundException(String.join("", "Event with id=", eventId.toString(),
                             " was not found"), new ErrorDtoUtil("The required object was not found.",
                             LocalDateTime.now()));
                 });
 
                 EventShortDto eventShortDto = CustomMapper.INSTANCE.toEventShortDto(event,
-                        eventRequestStorage.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED,
+                        eventRequestRepository.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED,
                                 event.getId()),
                         statisticModuleClient.getCountViewsOfHit(String.join("", "/events/",
                                 event.getId().toString())));

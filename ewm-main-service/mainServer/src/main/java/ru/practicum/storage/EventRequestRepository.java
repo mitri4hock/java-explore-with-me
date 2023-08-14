@@ -8,7 +8,7 @@ import ru.practicum.model.EventRequest;
 import java.util.List;
 
 @Repository
-public interface EventRequestStorage extends JpaRepository<EventRequest, Long> {
+public interface EventRequestRepository extends JpaRepository<EventRequest, Long> {
 
     long countByStatusAndEvent_Id(EventRequestStatusEnum status, Long id);
 

@@ -14,8 +14,8 @@ import ru.practicum.exception.ErrorDtoUtil;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.mapper.CustomMapper;
 import ru.practicum.model.Category;
-import ru.practicum.storage.CategoriesStorage;
-import ru.practicum.storage.EventStorage;
+import ru.practicum.storage.CategoriesRepository;
+import ru.practicum.storage.EventRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,13 +26,13 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 @AllArgsConstructor
 public class CategoriesServiceImpl implements CategoriesService {
-    private final CategoriesStorage categoriesStorage;
-    private final EventStorage eventStorage;
+    private final CategoriesRepository categoriesRepository;
+    private final EventRepository eventRepository;
 
     @Override
     @Transactional
     public CategoryDto createCategory(CategoryDto categoryDto) {
-        if (categoriesStorage.findByName(categoryDto.getName()).isPresent()) {
+        if (categoriesRepository.findByName(categoryDto.getName()).isPresent()) {
             String msg = String.join("",
                     "Запрошено создание новой категории с уже сузествующим именем: ", categoryDto.getName());
             log.info(msg);
@@ -40,7 +40,7 @@ public class CategoriesServiceImpl implements CategoriesService {
                     LocalDateTime.now()));
         }
         Category newCategory = CustomMapper.INSTANCE.toCategory(categoryDto);
-        categoriesStorage.save(newCategory);
+        categoriesRepository.save(newCategory);
         log.info("создана новая категория: {}", newCategory.toString());
         return CustomMapper.INSTANCE.toCategoryDto(newCategory);
     }
@@ -48,13 +48,13 @@ public class CategoriesServiceImpl implements CategoriesService {
     @Override
     @Transactional
     public CategoryDto patchCategory(CategoryDto categoryDto, Long catId) {
-        var result = categoriesStorage.findById(catId).orElseThrow(() -> {
+        var result = categoriesRepository.findById(catId).orElseThrow(() -> {
             log.info("запрошено изменение неуществующего статуса. Id={}", catId);
             throw new NotFoundException(String.join("", "Category with id=", catId.toString(),
                     " was not found"),
                     new ErrorDtoUtil("The required object was not found.", LocalDateTime.now()));
         });
-        var oldCategory = categoriesStorage.findByName(categoryDto.getName());
+        var oldCategory = categoriesRepository.findByName(categoryDto.getName());
         if (oldCategory.isPresent() && !oldCategory.get().getId().equals(catId)) {
             log.info("попытка присвоения для статуса уже существующего имени. Name={}", categoryDto.getName());
             throw new ConflictException(String.join("", "That name=", categoryDto.getName(),
@@ -69,7 +69,7 @@ public class CategoriesServiceImpl implements CategoriesService {
     public List<CategoryDto> findCategories(Integer from, Integer size) {
         Sort sortBy = Sort.by(Sort.Order.desc("id"));
         Pageable page = PageRequest.of(from / size, size, sortBy);
-        Page<Category> preRez = categoriesStorage.findAll(page);
+        Page<Category> preRez = categoriesRepository.findAll(page);
         return preRez.getContent().stream()
                 .map(CustomMapper.INSTANCE::toCategoryDto)
                 .collect(Collectors.toList());
@@ -77,7 +77,7 @@ public class CategoriesServiceImpl implements CategoriesService {
 
     @Override
     public CategoryDto findCategoriById(Long catId) {
-        var rezult = categoriesStorage.findById(catId).orElseThrow(() -> {
+        var rezult = categoriesRepository.findById(catId).orElseThrow(() -> {
             log.info("запрошена несуществующая категория id={}", catId);
             throw new NotFoundException(String.join("", "Category with id=", catId.toString(),
                     " was not found"), new ErrorDtoUtil("The required object was not found.",
@@ -89,19 +89,19 @@ public class CategoriesServiceImpl implements CategoriesService {
     @Override
     @Transactional
     public void deleteCategory(Long catId) {
-        if (categoriesStorage.findById(catId).isEmpty()) {
+        if (categoriesRepository.findById(catId).isEmpty()) {
             log.info("Запрошено удаление несуществующей категории. id={}", catId);
             throw new NotFoundException(String.join("", "Category with id=", catId.toString(),
                     " was not found"), new ErrorDtoUtil("The required object was not found.",
                     LocalDateTime.now()));
         }
-        if (!eventStorage.findByCategory_Id(catId).isEmpty()) {
+        if (!eventRepository.findByCategory_Id(catId).isEmpty()) {
             log.info("Запрошено удаление категории, со связанными событиями. Id={}", catId);
             throw new ConflictException("The category is not empty",
                     new ErrorDtoUtil("For the requested operation the conditions are not met.",
                             LocalDateTime.now()));
         }
-        var delEntity = categoriesStorage.removeById(catId);
+        var delEntity = categoriesRepository.removeById(catId);
         log.info("категория удалена: {}", delEntity);
     }
 }

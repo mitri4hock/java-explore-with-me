@@ -10,13 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface EventStorage extends JpaRepository<Event, Long> {
-
-    @Override
-    Event save(Event event);
-
-    @Override
-    Optional<Event> findById(Long aLong);
+public interface EventRepository extends JpaRepository<Event, Long> {
 
     List<Event> findByInitiator_Id(Long id, Pageable pageable);
 

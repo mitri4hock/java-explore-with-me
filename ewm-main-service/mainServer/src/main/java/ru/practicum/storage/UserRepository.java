@@ -10,22 +10,9 @@ import java.util.Collection;
 import java.util.Optional;
 
 @Repository
-public interface UserStorage extends JpaRepository<User, Long> {
-
-    @Override
-    Page<User> findAll(Pageable page);
+public interface UserRepository extends JpaRepository<User, Long> {
 
     Page<User> findByIdIn(Collection<Long> ids, Pageable pageable);
 
-    @Override
-    User save(User user);
-
-    @Override
-    Optional<User> findById(Long aLong);
-
     Optional<User> findByName(String name);
-
-
-    @Override
-    void deleteById(Long aLong);
 }

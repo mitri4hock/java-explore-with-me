@@ -10,25 +10,9 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface CategoriesStorage extends JpaRepository<Category, Long> {
-    @Override
-    Category save(Category category);
-
-
-    @Override
-    Optional<Category> findById(Long aLong);
+public interface CategoriesRepository extends JpaRepository<Category, Long> {
 
     List<Category> removeById(Long id);
 
-
-
-//    @Override
-//    void deleteById(Long aLong);
-
-
     Optional<Category> findByName(String name);
-
-    @Override
-    Page<Category> findAll(Pageable pageable);
-
 }

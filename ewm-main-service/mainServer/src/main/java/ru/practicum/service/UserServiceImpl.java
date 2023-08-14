@@ -14,7 +14,7 @@ import ru.practicum.exception.ErrorDtoUtil;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.mapper.CustomMapper;
 import ru.practicum.model.User;
-import ru.practicum.storage.UserStorage;
+import ru.practicum.storage.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class UserServiceImpl implements UserService {
 
-    private final UserStorage userStorage;
+    private final UserRepository userRepository;
 
     @Override
     public List<UserDto> findUsers(Integer from, Integer size, ArrayList<Long> ids) {
@@ -35,9 +35,9 @@ public class UserServiceImpl implements UserService {
         Pageable page = PageRequest.of(from / size, size, sortBy);
         Page<User> result;
         if (ids == null) {
-            result = userStorage.findAll(page);
+            result = userRepository.findAll(page);
         } else {
-            result = userStorage.findByIdIn(ids, page);
+            result = userRepository.findByIdIn(ids, page);
         }
         log.info("запрошен список юзеров. Параметры запроса: from={}, size={}, ids={}", from, size, ids);
         return result.getContent().stream()
@@ -48,7 +48,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserDto createUser(UserDto userDto) {
-        if (userStorage.findByName(userDto.getName()).isPresent()) {
+        if (userRepository.findByName(userDto.getName()).isPresent()) {
             String msg = String.join("",
                     "Запрошено создание нового Пользователя с уже сузествующим именем: ", userDto.getName());
             log.info(msg);
@@ -56,7 +56,7 @@ public class UserServiceImpl implements UserService {
                     LocalDateTime.now()));
         }
         User newUser = CustomMapper.INSTANCE.toUser(userDto);
-        userStorage.save(newUser);
+        userRepository.save(newUser);
         log.info("создан новый пользователь: {}", newUser.toString());
         return CustomMapper.INSTANCE.toUserDto(newUser);
     }
@@ -64,12 +64,12 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void deleteUser(Long userId) {
-        if (userStorage.findById(userId).isEmpty()) {
+        if (userRepository.findById(userId).isEmpty()) {
             log.info("запрошено удаление несуществующего пользователя с id={}", userId);
             throw new NotFoundException(String.join("", "User with id=", userId.toString(),
                     " was not found"), new ErrorDtoUtil("The required object was not found.",
                     LocalDateTime.now()));
         }
-        userStorage.deleteById(userId);
+        userRepository.deleteById(userId);
     }
 }

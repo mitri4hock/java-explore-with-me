@@ -18,7 +18,6 @@ import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.ErrorDtoUtil;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.mapper.CustomMapper;
-import ru.practicum.mapper.UtilitMapper;
 import ru.practicum.model.Category;
 import ru.practicum.model.Event;
 import ru.practicum.model.User;
@@ -38,25 +37,25 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class EventServiceImpl implements EventService {
 
-    private final EventStorage eventStorage;
-    private final UserStorage userStorage;
-    private final CategoriesStorage categoriesStorage;
-    private final EventRequestStorage eventRequestStorage;
+    private final EventRepository eventRepository;
+    private final UserRepository userRepository;
+    private final CategoriesRepository categoriesRepository;
+    private final EventRequestRepository eventRequestRepository;
     private final StatisticModuleClient statisticModuleClient;
-    private final CustomStorage customStorage;
+    private final CustomRepository customRepository;
 
     private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(UtilClass.FORMAT_DATE);
 
     @Override
     @Transactional
     public EventFullDto createEvent(Long userId, NewEventDto newEventDto) {
-        User user = userStorage.findById(userId).orElseThrow(() -> {
+        User user = userRepository.findById(userId).orElseThrow(() -> {
             log.info("запрошено добавление события несуществующим пользователем с id={}", userId);
             throw new NotFoundException(String.join("", "User with id=", userId.toString(),
                     " was not found"), new ErrorDtoUtil("The required object was not found.",
                     LocalDateTime.now()));
         });
-        Category category = categoriesStorage.findById(newEventDto.getCategory()).orElseThrow(() -> {
+        Category category = categoriesRepository.findById(newEventDto.getCategory()).orElseThrow(() -> {
             log.info("запрошено добавление события с несуществующей категорией с id={}", newEventDto.getCategory());
             throw new NotFoundException(String.join("", "Category with id=",
                     newEventDto.getCategory().toString(), " was not found"),
@@ -72,7 +71,7 @@ public class EventServiceImpl implements EventService {
                             LocalDateTime.now()));
         }
         Event event = CustomMapper.INSTANCE.toEvent(newEventDto, category, user);
-        eventStorage.save(event);
+        eventRepository.save(event);
         log.info("создано новое событие: {}", event);
         return CustomMapper.INSTANCE.toEventFullDto(event, 0L, 0L);
     }
@@ -80,13 +79,13 @@ public class EventServiceImpl implements EventService {
     @Override
     @Transactional
     public EventFullDto patchEvent(Long userId, Long eventId, UpdateEventUserRequestDto updateEventUserRequestDto) {
-        userStorage.findById(userId).orElseThrow(() -> {
+        userRepository.findById(userId).orElseThrow(() -> {
             log.info("запрошено изменение события несуществующим пользователем с id={}", userId);
             throw new NotFoundException(String.join("", "User with id=", userId.toString(),
                     " was not found"), new ErrorDtoUtil("The required object was not found.",
                     LocalDateTime.now()));
         });
-        Event event = eventStorage.findById(eventId).orElseThrow(() -> {
+        Event event = eventRepository.findById(eventId).orElseThrow(() -> {
             log.info("запрошено изменение несуществующего события с id={}", eventId);
             throw new NotFoundException(String.join("", "Event with id=", eventId.toString(),
                     " was not found"), new ErrorDtoUtil("fThe required object was not found.",
@@ -107,7 +106,7 @@ public class EventServiceImpl implements EventService {
                 event.setAnnotation(updateEventUserRequestDto.getAnnotation());
             }
             if (updateEventUserRequestDto.getCategory() != null) {
-                Category newCategory = categoriesStorage.findById(updateEventUserRequestDto.getCategory())
+                Category newCategory = categoriesRepository.findById(updateEventUserRequestDto.getCategory())
                         .orElseThrow(() -> {
                             log.info("запрошено bpvtytybизменение события на несуществующую категорию с id={}",
                                     updateEventUserRequestDto.getCategory());
@@ -160,7 +159,7 @@ public class EventServiceImpl implements EventService {
 
         log.info("обновлено событие: {}", event);
         return CustomMapper.INSTANCE.toEventFullDto(event,
-                eventRequestStorage.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED, eventId),
+                eventRequestRepository.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED, eventId),
                 statisticModuleClient.getCountViewsOfHit(String.join("", "/events/",
                         eventId.toString())));
     }
@@ -169,10 +168,10 @@ public class EventServiceImpl implements EventService {
     public List<EventShortDto> getEventForUser(Long userId, Integer from, Integer size) {
         Sort sortBy = Sort.by(Sort.Order.desc("id"));
         Pageable page = PageRequest.of(from / size, size, sortBy);
-        List<Event> rez = eventStorage.findByInitiator_Id(userId, page);
+        List<Event> rez = eventRepository.findByInitiator_Id(userId, page);
         return rez.stream()
                 .map(x -> CustomMapper.INSTANCE.toEventShortDto(x,
-                        eventRequestStorage.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED,
+                        eventRequestRepository.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED,
                                 x.getId()),
                         statisticModuleClient.getCountViewsOfHit(String.join("", "/events/",
                                 x.getId().toString()))))
@@ -181,13 +180,13 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public EventFullDto findEventCreatedByUser(Long userId, Long eventId) {
-        userStorage.findById(userId).orElseThrow(() -> {
+        userRepository.findById(userId).orElseThrow(() -> {
             log.info("запрошено изменение события несуществующим пользователем с id={}", userId);
             throw new NotFoundException(String.join("", "User with id=", userId.toString(),
                     " was not found"), new ErrorDtoUtil("The required object was not found.",
                     LocalDateTime.now()));
         });
-        Event event = eventStorage.findById(eventId).orElseThrow(() -> {
+        Event event = eventRepository.findById(eventId).orElseThrow(() -> {
             log.info("запрошено изменение несуществующего события с id={}", eventId);
             throw new NotFoundException(String.join("", "Event with id=", eventId.toString(),
                     " was not found"), new ErrorDtoUtil("The required object was not found.",
@@ -200,7 +199,7 @@ public class EventServiceImpl implements EventService {
                     LocalDateTime.now()));
         }
         return CustomMapper.INSTANCE.toEventFullDto(event,
-                eventRequestStorage.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED,
+                eventRequestRepository.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED,
                         eventId),
                 statisticModuleClient.getCountViewsOfHit(String.join("", "/events/",
                         eventId.toString())));
@@ -208,7 +207,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public EventFullDto findPublishedEvent(Long id, HttpServletRequest request) {
-        var rez = eventStorage.findByIdAndState(id, StateEnum.PUBLISHED)
+        var rez = eventRepository.findByIdAndState(id, StateEnum.PUBLISHED)
                 .orElseThrow(() -> {
                     log.info("Опубликованное событие не найдено. id={}", id);
                     throw new NotFoundException(String.join("", "Published Event with id=", id.toString(),
@@ -217,7 +216,7 @@ public class EventServiceImpl implements EventService {
                 });
         statisticModuleClient.postRequestToHit(request);
         return CustomMapper.INSTANCE.toEventFullDto(rez,
-                eventRequestStorage.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED,
+                eventRequestRepository.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED,
                         rez.getId()),
                 statisticModuleClient.getCountViewsOfHit(String.join("", "/events/",
                         rez.getId().toString())));
@@ -225,13 +224,13 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public List<ParticipationRequestDto> getParticipationForUser(Long userId, Long eventId) {
-        userStorage.findById(userId).orElseThrow(() -> {
+        userRepository.findById(userId).orElseThrow(() -> {
             log.info("запрошено наличие заявки в события несуществующим пользователем с id={}", userId);
             throw new NotFoundException(String.join("", "User with id=", userId.toString(),
                     " was not found"), new ErrorDtoUtil("The required object was not found.",
                     LocalDateTime.now()));
         });
-        var event = eventStorage.findById(eventId);
+        var event = eventRepository.findById(eventId);
         if (event.isEmpty()) {
             log.info("запрошено наличие заявки в несуществующее событие с id={}", eventId);
             throw new NotFoundException(String.join("", "Event with id=", eventId.toString(),
@@ -245,7 +244,7 @@ public class EventServiceImpl implements EventService {
                     new ErrorDtoUtil("conflict parameters",
                             LocalDateTime.now()));
         }
-        var rez = eventRequestStorage.findByEvent_IdAndEvent_Initiator_IdOrderByCreatedDesc(
+        var rez = eventRequestRepository.findByEvent_IdAndEvent_Initiator_IdOrderByCreatedDesc(
                 eventId, userId);
         return rez.stream()
                 .map(x -> CustomMapper.INSTANCE.toParticipationRequestDto(x, true))
@@ -263,12 +262,12 @@ public class EventServiceImpl implements EventService {
             statesEnum = states.stream()
                     .map(StateEnum::valueOf).collect(Collectors.toList());
         }
-        var rez = customStorage.findEventByFilters(users,
+        var rez = customRepository.findEventByFilters(users,
                 statesEnum, categories, rangeStart, rangeEnd, page);
 
         return rez.stream()
                 .map(x -> CustomMapper.INSTANCE.toEventFullDto(x,
-                        eventRequestStorage.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED,
+                        eventRequestRepository.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED,
                                 x.getId()),
                         statisticModuleClient.getCountViewsOfHit(String.join("", "/events/",
                                 x.getId().toString()))))
@@ -290,7 +289,7 @@ public class EventServiceImpl implements EventService {
         }
         Sort sortBy = Sort.by(Sort.Order.desc("eventDate"));
         Pageable page = PageRequest.of(from / size, size, sortBy);
-        List<Event> rez = customStorage.findEventsByUsers(text, categories, paid,
+        List<Event> rez = customRepository.findEventsByUsers(text, categories, paid,
                 rangeStart, rangeEnd, StateEnum.PUBLISHED, page);
         List<Event> preRez;
         if (sortEnum.equals(SortEnum.VIEWS)) {
@@ -305,7 +304,7 @@ public class EventServiceImpl implements EventService {
             preRez = rez;
         }
         if (Boolean.TRUE.equals(onlyAvailable)) {
-            rez = preRez.stream().filter(x -> x.getParticipantLimit() > eventRequestStorage
+            rez = preRez.stream().filter(x -> x.getParticipantLimit() > eventRequestRepository
                             .countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED, x.getId()))
                     .collect(Collectors.toList());
         } else {
@@ -314,7 +313,7 @@ public class EventServiceImpl implements EventService {
         statisticModuleClient.postRequestToHit(request);
         return rez.stream()
                 .map(x -> CustomMapper.INSTANCE.toEventShortDto(x,
-                        eventRequestStorage.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED,
+                        eventRequestRepository.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED,
                                 x.getId()),
                         statisticModuleClient.getCountViewsOfHit(String.join("", "/events/",
                                 x.getId().toString()))))

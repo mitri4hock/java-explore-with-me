@@ -16,10 +16,10 @@ import java.util.Collection;
 import java.util.List;
 
 @Repository
-public class CustomStorage {
+public class CustomRepository {
     EntityManager em;
 
-    public CustomStorage(EntityManager em) {
+    public CustomRepository(EntityManager em) {
         this.em = em;
     }
 
