@@ -17,6 +17,7 @@ import ru.practicum.exception.BadParametrException;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.ErrorDtoUtil;
 import ru.practicum.exception.NotFoundException;
+import ru.practicum.mapper.CustomMapper;
 import ru.practicum.mapper.UtilitMapper;
 import ru.practicum.model.Category;
 import ru.practicum.model.Event;
@@ -70,21 +71,21 @@ public class EventServiceImpl implements EventService {
                     new ErrorDtoUtil("For the requested operation the conditions are not met.",
                             LocalDateTime.now()));
         }
-        Event event = UtilitMapper.toEvent(newEventDto, category, user);
+        Event event = CustomMapper.INSTANCE.toEvent(newEventDto, category, user);
         eventStorage.save(event);
         log.info("создано новое событие: {}", event);
-        return UtilitMapper.toEventFullDto(event, 0L, 0L);
+        return CustomMapper.INSTANCE.toEventFullDto(event, 0L, 0L);
     }
 
     @Override
     @Transactional
     public EventFullDto patchEvent(Long userId, Long eventId, UpdateEventUserRequestDto updateEventUserRequestDto) {
-        if (userStorage.findById(userId).isEmpty()) {
+        userStorage.findById(userId).orElseThrow(() -> {
             log.info("запрошено изменение события несуществующим пользователем с id={}", userId);
             throw new NotFoundException(String.join("", "User with id=", userId.toString(),
                     " was not found"), new ErrorDtoUtil("The required object was not found.",
                     LocalDateTime.now()));
-        }
+        });
         Event event = eventStorage.findById(eventId).orElseThrow(() -> {
             log.info("запрошено изменение несуществующего события с id={}", eventId);
             throw new NotFoundException(String.join("", "Event with id=", eventId.toString(),
@@ -117,7 +118,8 @@ public class EventServiceImpl implements EventService {
                         });
                 event.setCategory(newCategory);
             }
-            if (updateEventUserRequestDto.getDescription() != null) {
+            if (updateEventUserRequestDto.getDescription() != null &&
+                    !updateEventUserRequestDto.getDescription().isBlank()) {
                 event.setDescription(updateEventUserRequestDto.getDescription());
             }
             if (updateEventUserRequestDto.getEventDate() != null) {
@@ -156,9 +158,8 @@ public class EventServiceImpl implements EventService {
                             LocalDateTime.now()));
         }
 
-        eventStorage.save(event);
         log.info("обновлено событие: {}", event);
-        return UtilitMapper.toEventFullDto(event,
+        return CustomMapper.INSTANCE.toEventFullDto(event,
                 eventRequestStorage.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED, eventId),
                 statisticModuleClient.getCountViewsOfHit(String.join("", "/events/",
                         eventId.toString())));
@@ -170,7 +171,7 @@ public class EventServiceImpl implements EventService {
         Pageable page = PageRequest.of(from / size, size, sortBy);
         List<Event> rez = eventStorage.findByInitiator_Id(userId, page);
         return rez.stream()
-                .map(x -> UtilitMapper.toEventShortDto(x,
+                .map(x -> CustomMapper.INSTANCE.toEventShortDto(x,
                         eventRequestStorage.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED,
                                 x.getId()),
                         statisticModuleClient.getCountViewsOfHit(String.join("", "/events/",
@@ -180,12 +181,12 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public EventFullDto findEventCreatedByUser(Long userId, Long eventId) {
-        if (userStorage.findById(userId).isEmpty()) {
+        userStorage.findById(userId).orElseThrow(() -> {
             log.info("запрошено изменение события несуществующим пользователем с id={}", userId);
             throw new NotFoundException(String.join("", "User with id=", userId.toString(),
                     " was not found"), new ErrorDtoUtil("The required object was not found.",
                     LocalDateTime.now()));
-        }
+        });
         Event event = eventStorage.findById(eventId).orElseThrow(() -> {
             log.info("запрошено изменение несуществующего события с id={}", eventId);
             throw new NotFoundException(String.join("", "Event with id=", eventId.toString(),
@@ -198,7 +199,7 @@ public class EventServiceImpl implements EventService {
                     " have not event with id=", eventId.toString()), new ErrorDtoUtil("The required object was not found.",
                     LocalDateTime.now()));
         }
-        return UtilitMapper.toEventFullDto(event,
+        return CustomMapper.INSTANCE.toEventFullDto(event,
                 eventRequestStorage.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED,
                         eventId),
                 statisticModuleClient.getCountViewsOfHit(String.join("", "/events/",
@@ -215,7 +216,7 @@ public class EventServiceImpl implements EventService {
                             LocalDateTime.now()));
                 });
         statisticModuleClient.postRequestToHit(request);
-        return UtilitMapper.toEventFullDto(rez,
+        return CustomMapper.INSTANCE.toEventFullDto(rez,
                 eventRequestStorage.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED,
                         rez.getId()),
                 statisticModuleClient.getCountViewsOfHit(String.join("", "/events/",
@@ -224,12 +225,12 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public List<ParticipationRequestDto> getParticipationForUser(Long userId, Long eventId) {
-        if (userStorage.findById(userId).isEmpty()) {
+        userStorage.findById(userId).orElseThrow(() -> {
             log.info("запрошено наличие заявки в события несуществующим пользователем с id={}", userId);
             throw new NotFoundException(String.join("", "User with id=", userId.toString(),
                     " was not found"), new ErrorDtoUtil("The required object was not found.",
                     LocalDateTime.now()));
-        }
+        });
         var event = eventStorage.findById(eventId);
         if (event.isEmpty()) {
             log.info("запрошено наличие заявки в несуществующее событие с id={}", eventId);
@@ -247,7 +248,7 @@ public class EventServiceImpl implements EventService {
         var rez = eventRequestStorage.findByEvent_IdAndEvent_Initiator_IdOrderByCreatedDesc(
                 eventId, userId);
         return rez.stream()
-                .map(x -> UtilitMapper.toParticipationRequestDto(x, true))
+                .map(x -> CustomMapper.INSTANCE.toParticipationRequestDto(x, true))
                 .collect(Collectors.toList());
     }
 
@@ -262,12 +263,11 @@ public class EventServiceImpl implements EventService {
             statesEnum = states.stream()
                     .map(StateEnum::valueOf).collect(Collectors.toList());
         }
-        //eventStorage
         var rez = customStorage.findEventByFilters(users,
                 statesEnum, categories, rangeStart, rangeEnd, page);
 
         return rez.stream()
-                .map(x -> UtilitMapper.toEventFullDto(x,
+                .map(x -> CustomMapper.INSTANCE.toEventFullDto(x,
                         eventRequestStorage.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED,
                                 x.getId()),
                         statisticModuleClient.getCountViewsOfHit(String.join("", "/events/",
@@ -313,7 +313,7 @@ public class EventServiceImpl implements EventService {
         }
         statisticModuleClient.postRequestToHit(request);
         return rez.stream()
-                .map(x -> UtilitMapper.toEventShortDto(x,
+                .map(x -> CustomMapper.INSTANCE.toEventShortDto(x,
                         eventRequestStorage.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED,
                                 x.getId()),
                         statisticModuleClient.getCountViewsOfHit(String.join("", "/events/",

@@ -20,10 +20,6 @@ public class CategoriesController {
 
     private final CategoriesService categoriesService;
 
-    /**
-     * Получение категорий
-     * В случае, если по заданным фильтрам не найдено ни одной категории, возвращает пустой список
-     */
     @GetMapping("/categories")
     @ResponseStatus(HttpStatus.OK)
     public List<CategoryDto> findCategories(@RequestParam(value = "from", defaultValue = "0") @PositiveOrZero Integer from,
@@ -31,30 +27,18 @@ public class CategoriesController {
         return categoriesService.findCategories(from, size);
     }
 
-    /**
-     * Получение информации о категории по её идентификатору
-     * В случае, если категории с заданным id не найдено, возвращает статус код 404
-     */
     @GetMapping("/categories/{catId}")
     @ResponseStatus(HttpStatus.OK)
     public CategoryDto findCategoriById(@PathVariable @PositiveOrZero Long catId) {
         return categoriesService.findCategoriById(catId);
     }
 
-    /**
-     * Добавление новой категории
-     * Обратите внимание: имя категории должно быть уникальным
-     */
     @PostMapping("/admin/categories")
     @ResponseStatus(HttpStatus.CREATED)
     public CategoryDto createCategory(@RequestBody @Valid CategoryDto categoryDto) {
         return categoriesService.createCategory(categoryDto);
     }
 
-    /**
-     * Изменение категории
-     * Обратите внимание: имя категории должно быть уникальным
-     */
     @PatchMapping("/admin/categories/{catId}")
     @ResponseStatus(HttpStatus.OK)
     public CategoryDto patchCategory(@RequestBody @Valid CategoryDto categoryDto,
@@ -62,10 +46,6 @@ public class CategoriesController {
         return categoriesService.patchCategory(categoryDto, catId);
     }
 
-    /**
-     * Удаление категории
-     * Обратите внимание: с категорией не должно быть связано ни одного события.
-     */
     @DeleteMapping("/admin/categories/{catId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteCategory(@PathVariable @PositiveOrZero Long catId) {

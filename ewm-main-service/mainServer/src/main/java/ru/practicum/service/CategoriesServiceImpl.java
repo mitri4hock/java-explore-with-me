@@ -62,7 +62,6 @@ public class CategoriesServiceImpl implements CategoriesService {
                     new ErrorDtoUtil("The required object already exists.", LocalDateTime.now()));
         }
         result.setName(categoryDto.getName());
-        categoriesStorage.save(result);
         return CustomMapper.INSTANCE.toCategoryDto(result);
     }
 

@@ -3,6 +3,7 @@ package ru.practicum.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.validator.constraints.Length;
 import org.springframework.beans.factory.annotation.Value;
 import ru.practicum.util.CustomLocation;
 
@@ -16,13 +17,13 @@ import javax.validation.constraints.Size;
 @AllArgsConstructor
 public class NewEventDto {
     @NotBlank
-    @Size(max = 2000, min = 20)
+    @Length(max = 2000, min = 20)
     private String annotation;
     @NotNull
     @PositiveOrZero
     private Long category;
     @NotBlank
-    @Size(max = 7000, min = 20)
+    @Length(max = 7000, min = 20)
     private String description;
     @NotNull
     private String eventDate;
@@ -35,6 +36,6 @@ public class NewEventDto {
     @Value("true")
     private Boolean requestModeration;
     @NotBlank
-    @Size(max = 120, min = 3)
+    @Length(max = 120, min = 3)
     private String title;
 }

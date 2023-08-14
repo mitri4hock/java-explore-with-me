@@ -10,6 +10,7 @@ import ru.practicum.dto.UpdateCompilationRequestDto;
 import ru.practicum.service.CompilationService;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 import java.util.List;
 
@@ -21,18 +22,12 @@ public class CompilationController {
 
     private final CompilationService compilationService;
 
-    /**
-     * Добавление новой подборки (подборка может не содержать событий)
-     */
     @PostMapping("/admin/compilations")
     @ResponseStatus(HttpStatus.CREATED)
     public CompilationDto createCompilationByAdmin(@RequestBody @Valid NewCompilationDto newCompilationDto) {
         return compilationService.createCompilationByAdmin(newCompilationDto);
     }
 
-    /**
-     * Обновить информацию о подборке
-     */
     @PatchMapping("/admin/compilations/{compId}")
     @ResponseStatus(HttpStatus.OK)
     public CompilationDto patchCompilationByAdmin(@PathVariable @PositiveOrZero Long compId,
@@ -40,36 +35,23 @@ public class CompilationController {
         return compilationService.patchCompilationByAdmin(compId, updateCompilationRequestDto);
     }
 
-    /**
-     * Удаление подборки
-     */
     @DeleteMapping("/admin/compilations/{compId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteCompilation(@PathVariable @PositiveOrZero Long compId) {
         compilationService.deleteCompilation(compId);
     }
 
-    /**
-     * Получение подборки событий по его id
-     * В случае, если подборки с заданным id не найдено, возвращает статус код 404
-     */
     @GetMapping("/compilations/{compId}")
     @ResponseStatus(HttpStatus.OK)
     public CompilationDto findCompilationById(@PathVariable @PositiveOrZero Long compId) {
         return compilationService.findCompilationById(compId);
     }
 
-    /**
-     * Получение подборок событий
-     * В случае, если по заданным фильтрам не найдено ни одной подборки, возвращает пустой список
-     */
     @GetMapping("/compilations")
     @ResponseStatus(HttpStatus.OK)
     public List<CompilationDto> findCompilation(@RequestParam(value = "pinned", required = false) Boolean pinned,
-                                                @RequestParam(value = "from", defaultValue = "0") Integer from,
-                                                @RequestParam(value = "size", defaultValue = "10") Integer size) {
+                                                @RequestParam(value = "from", defaultValue = "0") @PositiveOrZero Integer from,
+                                                @RequestParam(value = "size", defaultValue = "10") @Positive Integer size) {
         return compilationService.findCompilation(pinned, from, size);
     }
-
-
 }

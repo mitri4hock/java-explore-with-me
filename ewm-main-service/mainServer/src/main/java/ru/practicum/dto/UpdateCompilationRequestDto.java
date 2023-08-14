@@ -3,6 +3,7 @@ package ru.practicum.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.Size;
 import java.util.Set;
@@ -13,6 +14,6 @@ import java.util.Set;
 public class UpdateCompilationRequestDto {
     private Set<Long> events;
     private Boolean pinned;
-    @Size(max = 50, min = 1)
+    @Length(max = 50, min = 1)
     private String title;
 }

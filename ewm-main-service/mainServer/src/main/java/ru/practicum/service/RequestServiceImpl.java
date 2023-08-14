@@ -13,6 +13,7 @@ import ru.practicum.exception.BadParametrException;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.ErrorDtoUtil;
 import ru.practicum.exception.NotFoundException;
+import ru.practicum.mapper.CustomMapper;
 import ru.practicum.mapper.UtilitMapper;
 import ru.practicum.model.Event;
 import ru.practicum.model.EventRequest;
@@ -89,7 +90,7 @@ public class RequestServiceImpl implements RequestService {
         }
         requestStorage.save(rez);
         log.info("создана заявка на событие: {}", rez);
-        return UtilitMapper.toParticipationRequestDto(rez, true);
+        return CustomMapper.INSTANCE.toParticipationRequestDto(rez, true);
     }
 
     @Override
@@ -107,9 +108,8 @@ public class RequestServiceImpl implements RequestService {
                     new ErrorDtoUtil("Incorrectly made request.", LocalDateTime.now()));
         }
         request.setStatus(EventRequestStatusEnum.REJECTED);
-        requestStorage.save(request);
         log.info("заявка на событие отменена: {}", request);
-        return UtilitMapper.toParticipationRequestDto(request, true);
+        return CustomMapper.INSTANCE.toParticipationRequestDto(request, true);
     }
 
     @Override
@@ -123,7 +123,7 @@ public class RequestServiceImpl implements RequestService {
 
         var rez = requestStorage.findByRequester_IdOrderByCreatedDesc(userId);
         return rez.stream()
-                .map(x -> UtilitMapper.toParticipationRequestDto(x, true))
+                .map(x -> CustomMapper.INSTANCE.toParticipationRequestDto(x, true))
                 .collect(Collectors.toList());
     }
 
@@ -180,10 +180,9 @@ public class RequestServiceImpl implements RequestService {
                         eventRequest.setStatus(EventRequestStatusEnum.CONFIRMED);
                     }
                     eventRequest.setStatus(EventRequestStatusEnum.CONFIRMED);
-                    requestStorage.save(eventRequest);
                     log.info("заявка подтверждена: {}", eventRequest);
                     unit = rez.getConfirmedRequests();
-                    unit.add(UtilitMapper.toParticipationRequestDto(eventRequest, true));
+                    unit.add(CustomMapper.INSTANCE.toParticipationRequestDto(eventRequest, true));
                     rez.setConfirmedRequests(unit);
                     if (event.getParticipantLimit() - 1 == countOfConfirmed) {
                         requestStorage.findByEvent_IdAndStatus(eventId, EventRequestStatusEnum.PENDING).stream()
@@ -192,7 +191,7 @@ public class RequestServiceImpl implements RequestService {
                                     requestStorage.save(x);
                                     log.info("заявка отклонена: {}", x);
                                     var unitToDto = rez.getRejectedRequests();
-                                    unitToDto.add(UtilitMapper.toParticipationRequestDto(x,
+                                    unitToDto.add(CustomMapper.INSTANCE.toParticipationRequestDto(x,
                                             false));
                                     rez.setRejectedRequests(unitToDto);
                                 });
@@ -200,10 +199,9 @@ public class RequestServiceImpl implements RequestService {
                     break;
                 case REJECTED:
                     eventRequest.setStatus(EventRequestStatusEnum.REJECTED);
-                    requestStorage.save(eventRequest);
                     log.info("заявка отклонена: {}", eventRequest);
                     unit = rez.getRejectedRequests();
-                    unit.add(UtilitMapper.toParticipationRequestDto(eventRequest, false));
+                    unit.add(CustomMapper.INSTANCE.toParticipationRequestDto(eventRequest, false));
                     rez.setRejectedRequests(unit);
                     break;
             }
@@ -232,7 +230,8 @@ public class RequestServiceImpl implements RequestService {
                                         LocalDateTime.now()));
                     }));
         }
-        if (updateEventAdminRequestDto.getDescription() != null) {
+        if (updateEventAdminRequestDto.getDescription() != null &&
+                !updateEventAdminRequestDto.getDescription().isBlank()) {
             event.setDescription(updateEventAdminRequestDto.getDescription());
         }
         if (updateEventAdminRequestDto.getEventDate() != null) {
@@ -278,9 +277,8 @@ public class RequestServiceImpl implements RequestService {
             event.setTitle(updateEventAdminRequestDto.getTitle());
         }
 
-        eventStorage.save(event);
         log.info("обновлено событие: {}", event);
-        return UtilitMapper.toEventFullDto(event,
+        return CustomMapper.INSTANCE.toEventFullDto(event,
                 eventRequestStorage.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED, eventId),
                 statisticModuleClient.getCountViewsOfHit(String.join("", "/events/",
                         eventId.toString())));

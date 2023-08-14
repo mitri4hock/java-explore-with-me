@@ -45,12 +45,6 @@ public class CompilationServiceImpl implements CompilationService {
     @Override
     @Transactional
     public CompilationDto createCompilationByAdmin(NewCompilationDto newCompilationDto) {
-/**
- * странно, что можно создать рекомендацию без вложенных событий. Но раз так требуют тесты...
- */
-//        if (newCompilationDto.getEvents().isEmpty()) {
-//            return new CompilationDto();
-//        }
         Compilation compilationRezult = compilationStorage.save(CustomMapper.INSTANCE.toCompilation(newCompilationDto));
 
         List<EventShortDto> listEventShortDto = new ArrayList<>();
@@ -66,14 +60,14 @@ public class CompilationServiceImpl implements CompilationService {
             compilationsEvents.setEvent(event);
             compilationsEventsStorage.save(compilationsEvents);
 
-            EventShortDto eventShortDto = UtilitMapper.toEventShortDto(event,
+            EventShortDto eventShortDto = CustomMapper.INSTANCE.toEventShortDto(event,
                     eventRequestStorage.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED,
                             event.getId()),
                     statisticModuleClient.getCountViewsOfHit(String.join("", "/events/",
                             event.getId().toString())));
             listEventShortDto.add(eventShortDto);
         }
-        return UtilitMapper.toCompilationDto(compilationRezult, listEventShortDto);
+        return CustomMapper.INSTANCE.toCompilationDto(compilationRezult, listEventShortDto);
     }
 
     @Override
@@ -102,10 +96,10 @@ public class CompilationServiceImpl implements CompilationService {
         if (updateCompilationRequestDto.getPinned() != null) {
             compilation.setPinned(updateCompilationRequestDto.getPinned());
         }
-        if (updateCompilationRequestDto.getTitle() != null) {
+        if (updateCompilationRequestDto.getTitle() != null && !updateCompilationRequestDto.getTitle().isBlank()) {
             compilation.setTitle(updateCompilationRequestDto.getTitle());
         }
-        compilationStorage.save(compilation);
+        //compilationStorage.save(compilation);
 
         var delList = compilationsEventsStorage.findByCompilation_Id(compId);
         for (Long i : delList) {
@@ -126,7 +120,7 @@ public class CompilationServiceImpl implements CompilationService {
                 compilationsEvents.setEvent(event);
                 compilationsEventsStorage.save(compilationsEvents);
 
-                EventShortDto eventShortDto = UtilitMapper.toEventShortDto(event,
+                EventShortDto eventShortDto = CustomMapper.INSTANCE.toEventShortDto(event,
                         eventRequestStorage.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED,
                                 event.getId()),
                         statisticModuleClient.getCountViewsOfHit(String.join("", "/events/",
@@ -134,7 +128,7 @@ public class CompilationServiceImpl implements CompilationService {
                 listEventShortDto.add(eventShortDto);
             }
         }
-        return UtilitMapper.toCompilationDto(compilation, listEventShortDto);
+        return CustomMapper.INSTANCE.toCompilationDto(compilation, listEventShortDto);
     }
 
     @Override
@@ -154,14 +148,14 @@ public class CompilationServiceImpl implements CompilationService {
                         LocalDateTime.now()));
             });
 
-            EventShortDto eventShortDto = UtilitMapper.toEventShortDto(event,
+            EventShortDto eventShortDto = CustomMapper.INSTANCE.toEventShortDto(event,
                     eventRequestStorage.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED,
                             event.getId()),
                     statisticModuleClient.getCountViewsOfHit(String.join("", "/events/",
                             event.getId().toString())));
             listEventShortDto.add(eventShortDto);
         }
-        return UtilitMapper.toCompilationDto(compilation, listEventShortDto);
+        return CustomMapper.INSTANCE.toCompilationDto(compilation, listEventShortDto);
     }
 
     @Override
@@ -186,14 +180,14 @@ public class CompilationServiceImpl implements CompilationService {
                             LocalDateTime.now()));
                 });
 
-                EventShortDto eventShortDto = UtilitMapper.toEventShortDto(event,
+                EventShortDto eventShortDto = CustomMapper.INSTANCE.toEventShortDto(event,
                         eventRequestStorage.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED,
                                 event.getId()),
                         statisticModuleClient.getCountViewsOfHit(String.join("", "/events/",
                                 event.getId().toString())));
                 listEventShortDto.add(eventShortDto);
             }
-            rez.add(UtilitMapper.toCompilationDto(compilation, listEventShortDto));
+            rez.add(CustomMapper.INSTANCE.toCompilationDto(compilation, listEventShortDto));
         }
         return rez;
     }
