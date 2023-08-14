@@ -6,8 +6,6 @@ import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.Length;
 import ru.practicum.util.CustomLocation;
 
-import javax.validation.constraints.Size;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
