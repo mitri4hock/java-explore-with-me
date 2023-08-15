@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.dto.ViewStatsDto;
+import ru.practicum.exception.BadParamException;
 import ru.practicum.storage.HitsStorage;
 
 import java.time.LocalDateTime;
@@ -22,9 +23,14 @@ public class StatsServiceImpl implements StatsService {
     @Override
     public List<ViewStatsDto> findStatsOfHits(LocalDateTime start, LocalDateTime end, ArrayList<String> uris, Boolean unique) {
 
+        if (start.isAfter(end)) {
+            String msg = String.join("", "ошибка при передаче дат: start=",
+                    start.toString(), " ,end=", end.toString());
+            log.info(msg);
+            throw new BadParamException(msg);
+        }
         log.info("Запрошена статистика с параметрами: start - {}, end - {}, uris - {}, unique - {}, ",
                 start, end, uris, unique);
-
         if (unique == true && uris == null) {
             return hitsStorage.getStatsIpIsDistinctAndUriIsNot(start, end);
         } else if (unique == false && uris == null) {
