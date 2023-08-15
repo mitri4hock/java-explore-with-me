@@ -272,7 +272,7 @@ public class RequestServiceImpl implements RequestService {
                 event.setState(StateEnum.CANCELED);
             }
         }
-        if (updateEventAdminRequestDto.getTitle() != null) {
+        if (updateEventAdminRequestDto.getTitle() != null && !updateEventAdminRequestDto.getTitle().isBlank()) {
             event.setTitle(updateEventAdminRequestDto.getTitle());
         }
 

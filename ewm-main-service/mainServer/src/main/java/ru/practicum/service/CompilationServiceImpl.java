@@ -98,7 +98,6 @@ public class CompilationServiceImpl implements CompilationService {
         if (updateCompilationRequestDto.getTitle() != null && !updateCompilationRequestDto.getTitle().isBlank()) {
             compilation.setTitle(updateCompilationRequestDto.getTitle());
         }
-        //compilationStorage.save(compilation);
 
         var delList = compilationsEventsRepository.findByCompilation_Id(compId);
         for (Long i : delList) {

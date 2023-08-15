@@ -137,7 +137,7 @@ public class EventServiceImpl implements EventService {
             if (updateEventUserRequestDto.getRequestModeration() != null) {
                 event.setRequestModeration(updateEventUserRequestDto.getRequestModeration());
             }
-            if (updateEventUserRequestDto.getTitle() != null) {
+            if (updateEventUserRequestDto.getTitle() != null && !updateEventUserRequestDto.getTitle().isBlank()) {
                 event.setTitle(updateEventUserRequestDto.getTitle());
             }
             if (updateEventUserRequestDto.getStateAction() != null) {

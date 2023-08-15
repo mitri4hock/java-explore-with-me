@@ -22,12 +22,18 @@ public class CompilationController {
 
     private final CompilationService compilationService;
 
+    /**
+     * @operation Добавление новой подборки (подборка может не содержать событий)
+     */
     @PostMapping("/admin/compilations")
     @ResponseStatus(HttpStatus.CREATED)
     public CompilationDto createCompilationByAdmin(@RequestBody @Valid NewCompilationDto newCompilationDto) {
         return compilationService.createCompilationByAdmin(newCompilationDto);
     }
 
+    /**
+     * @operation Обновить информацию о подборке
+     */
     @PatchMapping("/admin/compilations/{compId}")
     @ResponseStatus(HttpStatus.OK)
     public CompilationDto patchCompilationByAdmin(@PathVariable @PositiveOrZero Long compId,
@@ -35,18 +41,29 @@ public class CompilationController {
         return compilationService.patchCompilationByAdmin(compId, updateCompilationRequestDto);
     }
 
+    /**
+     * @operation Удаление подборки
+     */
     @DeleteMapping("/admin/compilations/{compId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteCompilation(@PathVariable @PositiveOrZero Long compId) {
         compilationService.deleteCompilation(compId);
     }
 
+    /**
+     * @operation Получение подборки событий по его id
+     * В случае, если подборки с заданным id не найдено, возвращает статус код 404
+     */
     @GetMapping("/compilations/{compId}")
     @ResponseStatus(HttpStatus.OK)
     public CompilationDto findCompilationById(@PathVariable @PositiveOrZero Long compId) {
         return compilationService.findCompilationById(compId);
     }
 
+    /**
+     * @operation Получение подборок событий
+     * В случае, если по заданным фильтрам не найдено ни одной подборки, возвращает пустой список
+     */
     @GetMapping("/compilations")
     @ResponseStatus(HttpStatus.OK)
     public List<CompilationDto> findCompilation(@RequestParam(value = "pinned", required = false) Boolean pinned,
