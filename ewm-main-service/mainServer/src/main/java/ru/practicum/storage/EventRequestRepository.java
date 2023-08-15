@@ -10,7 +10,7 @@ import java.util.List;
 @Repository
 public interface EventRequestRepository extends JpaRepository<EventRequest, Long> {
 
-    long countByStatusAndEvent_Id(EventRequestStatusEnum status, Long id);
+    long countByStatusAndEventId(EventRequestStatusEnum status, Long id);
 
-    List<EventRequest> findByEvent_IdAndEvent_Initiator_IdOrderByCreatedDesc(Long eventId, Long inicializatorId);
+    List<EventRequest> findByEventIdAndEventInitiatorIdOrderByCreatedDesc(Long eventId, Long inicializatorId);
 }

@@ -14,8 +14,8 @@ public interface CompilationsEventsRepository extends JpaRepository<Compilations
     CompilationsEvents save(CompilationsEvents compilationsEvents);
 
     @Query("select c.id from CompilationsEvents c where c.compilation.id = :comId")
-    List<Long> findByCompilation_Id(@Param("comId") Long comId);
+    List<Long> findByCompilationId(@Param("comId") Long comId);
 
     @Query("select c.event.id from CompilationsEvents c where c.compilation.id = :comId")
-    List<Long> findEventIdByCompilation_Id(@Param("comId")Long comId);
+    List<Long> findEventIdByCompilationId(@Param("comId")Long comId);
 }

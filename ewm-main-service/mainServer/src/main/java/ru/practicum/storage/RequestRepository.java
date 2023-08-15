@@ -13,21 +13,21 @@ import java.util.Optional;
 @Repository
 public interface RequestRepository extends JpaRepository<EventRequest, Long> {
 
-    Optional<EventRequest> findByEvent_IdAndRequester_Id(Long eventId, Long requesterId);
+    Optional<EventRequest> findByEventIdAndRequesterId(Long eventId, Long requesterId);
 
-    Optional<EventRequest> findByEvent_IdAndId(Long eventId, Long requestId);
+    Optional<EventRequest> findByEventIdAndId(Long eventId, Long requestId);
 
 
-    long countByEvent_IdAndStatus(Long id, EventRequestStatusEnum status);
+    long countByEventIdAndStatus(Long id, EventRequestStatusEnum status);
 
-    List<EventRequest> findByRequester_IdOrderByCreatedDesc(Long id);
+    List<EventRequest> findByRequesterIdOrderByCreatedDesc(Long id);
 
-    List<EventRequest> findByEvent_IdAndStatus(Long eventId, EventRequestStatusEnum status);
+    List<EventRequest> findByEventIdAndStatus(Long eventId, EventRequestStatusEnum status);
 
     @Query("select e.event.id from EventRequest e " +
             " where e.requester.id = :userId " +
             " and e.status = :status " +
             " order by e.event.id")
-    List<Long> findByRequester_IdAndStatusOrderByEvent_IdAsc(@Param("userId") Long userId,
-                                                             @Param("status") EventRequestStatusEnum status);
+    List<Long> findByRequesterIdAndStatusOrderByEventIdAsc(@Param("userId") Long userId,
+                                                           @Param("status") EventRequestStatusEnum status);
 }

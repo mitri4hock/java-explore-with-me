@@ -60,7 +60,7 @@ public class CompilationServiceImpl implements CompilationService {
             compilationsEventsRepository.save(compilationsEvents);
 
             EventShortDto eventShortDto = CustomMapper.INSTANCE.toEventShortDto(event,
-                    eventRequestRepository.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED,
+                    eventRequestRepository.countByStatusAndEventId(EventRequestStatusEnum.CONFIRMED,
                             event.getId()),
                     statisticModuleClient.getCountViewsOfHit(String.join("", "/events/",
                             event.getId().toString())));
@@ -77,7 +77,7 @@ public class CompilationServiceImpl implements CompilationService {
                     " was not found"), new ErrorDtoUtil("The required object was not found.",
                     LocalDateTime.now()));
         }
-        var delList = compilationsEventsRepository.findByCompilation_Id(compId);
+        var delList = compilationsEventsRepository.findByCompilationId(compId);
         for (Long i : delList) {
             compilationsEventsRepository.deleteById(i);
         }
@@ -99,7 +99,7 @@ public class CompilationServiceImpl implements CompilationService {
             compilation.setTitle(updateCompilationRequestDto.getTitle());
         }
 
-        var delList = compilationsEventsRepository.findByCompilation_Id(compId);
+        var delList = compilationsEventsRepository.findByCompilationId(compId);
         for (Long i : delList) {
             compilationsEventsRepository.deleteById(i);
         }
@@ -119,7 +119,7 @@ public class CompilationServiceImpl implements CompilationService {
                 compilationsEventsRepository.save(compilationsEvents);
 
                 EventShortDto eventShortDto = CustomMapper.INSTANCE.toEventShortDto(event,
-                        eventRequestRepository.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED,
+                        eventRequestRepository.countByStatusAndEventId(EventRequestStatusEnum.CONFIRMED,
                                 event.getId()),
                         statisticModuleClient.getCountViewsOfHit(String.join("", "/events/",
                                 event.getId().toString())));
@@ -137,7 +137,7 @@ public class CompilationServiceImpl implements CompilationService {
                     LocalDateTime.now()));
         });
 
-        var findList = compilationsEventsRepository.findEventIdByCompilation_Id(compId);
+        var findList = compilationsEventsRepository.findEventIdByCompilationId(compId);
         List<EventShortDto> listEventShortDto = new ArrayList<>();
         for (Long eventId : findList) {
             Event event = eventRepository.findById(eventId).orElseThrow(() -> {
@@ -147,7 +147,7 @@ public class CompilationServiceImpl implements CompilationService {
             });
 
             EventShortDto eventShortDto = CustomMapper.INSTANCE.toEventShortDto(event,
-                    eventRequestRepository.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED,
+                    eventRequestRepository.countByStatusAndEventId(EventRequestStatusEnum.CONFIRMED,
                             event.getId()),
                     statisticModuleClient.getCountViewsOfHit(String.join("", "/events/",
                             event.getId().toString())));
@@ -169,7 +169,7 @@ public class CompilationServiceImpl implements CompilationService {
 
         List<CompilationDto> rez = new ArrayList<>();
         for (Compilation compilation : comList) {
-            var findList = compilationsEventsRepository.findEventIdByCompilation_Id(compilation.getId());
+            var findList = compilationsEventsRepository.findEventIdByCompilationId(compilation.getId());
             List<EventShortDto> listEventShortDto = new ArrayList<>();
             for (Long eventId : findList) {
                 Event event = eventRepository.findById(eventId).orElseThrow(() -> {
@@ -179,7 +179,7 @@ public class CompilationServiceImpl implements CompilationService {
                 });
 
                 EventShortDto eventShortDto = CustomMapper.INSTANCE.toEventShortDto(event,
-                        eventRequestRepository.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED,
+                        eventRequestRepository.countByStatusAndEventId(EventRequestStatusEnum.CONFIRMED,
                                 event.getId()),
                         statisticModuleClient.getCountViewsOfHit(String.join("", "/events/",
                                 event.getId().toString())));

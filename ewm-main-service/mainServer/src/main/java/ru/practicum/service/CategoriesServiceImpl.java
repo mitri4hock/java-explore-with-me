@@ -95,7 +95,7 @@ public class CategoriesServiceImpl implements CategoriesService {
                     " was not found"), new ErrorDtoUtil("The required object was not found.",
                     LocalDateTime.now()));
         }
-        if (!eventRepository.findByCategory_Id(catId).isEmpty()) {
+        if (!eventRepository.findByCategoryId(catId).isEmpty()) {
             log.info("Запрошено удаление категории, со связанными событиями. Id={}", catId);
             throw new ConflictException("The category is not empty",
                     new ErrorDtoUtil("For the requested operation the conditions are not met.",

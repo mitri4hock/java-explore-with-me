@@ -159,7 +159,7 @@ public class EventServiceImpl implements EventService {
 
         log.info("обновлено событие: {}", event);
         return CustomMapper.INSTANCE.toEventFullDto(event,
-                eventRequestRepository.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED, eventId),
+                eventRequestRepository.countByStatusAndEventId(EventRequestStatusEnum.CONFIRMED, eventId),
                 statisticModuleClient.getCountViewsOfHit(String.join("", "/events/",
                         eventId.toString())));
     }
@@ -168,10 +168,10 @@ public class EventServiceImpl implements EventService {
     public List<EventShortDto> getEventForUser(Long userId, Integer from, Integer size) {
         Sort sortBy = Sort.by(Sort.Order.desc("id"));
         Pageable page = PageRequest.of(from / size, size, sortBy);
-        List<Event> rez = eventRepository.findByInitiator_Id(userId, page);
+        List<Event> rez = eventRepository.findByInitiatorId(userId, page);
         return rez.stream()
                 .map(x -> CustomMapper.INSTANCE.toEventShortDto(x,
-                        eventRequestRepository.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED,
+                        eventRequestRepository.countByStatusAndEventId(EventRequestStatusEnum.CONFIRMED,
                                 x.getId()),
                         statisticModuleClient.getCountViewsOfHit(String.join("", "/events/",
                                 x.getId().toString()))))
@@ -199,7 +199,7 @@ public class EventServiceImpl implements EventService {
                     LocalDateTime.now()));
         }
         return CustomMapper.INSTANCE.toEventFullDto(event,
-                eventRequestRepository.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED,
+                eventRequestRepository.countByStatusAndEventId(EventRequestStatusEnum.CONFIRMED,
                         eventId),
                 statisticModuleClient.getCountViewsOfHit(String.join("", "/events/",
                         eventId.toString())));
@@ -216,7 +216,7 @@ public class EventServiceImpl implements EventService {
                 });
         statisticModuleClient.postRequestToHit(request);
         return CustomMapper.INSTANCE.toEventFullDto(rez,
-                eventRequestRepository.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED,
+                eventRequestRepository.countByStatusAndEventId(EventRequestStatusEnum.CONFIRMED,
                         rez.getId()),
                 statisticModuleClient.getCountViewsOfHit(String.join("", "/events/",
                         rez.getId().toString())));
@@ -244,7 +244,7 @@ public class EventServiceImpl implements EventService {
                     new ErrorDtoUtil("conflict parameters",
                             LocalDateTime.now()));
         }
-        var rez = eventRequestRepository.findByEvent_IdAndEvent_Initiator_IdOrderByCreatedDesc(
+        var rez = eventRequestRepository.findByEventIdAndEventInitiatorIdOrderByCreatedDesc(
                 eventId, userId);
         return rez.stream()
                 .map(x -> CustomMapper.INSTANCE.toParticipationRequestDto(x, true))
@@ -267,7 +267,7 @@ public class EventServiceImpl implements EventService {
 
         return rez.stream()
                 .map(x -> CustomMapper.INSTANCE.toEventFullDto(x,
-                        eventRequestRepository.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED,
+                        eventRequestRepository.countByStatusAndEventId(EventRequestStatusEnum.CONFIRMED,
                                 x.getId()),
                         statisticModuleClient.getCountViewsOfHit(String.join("", "/events/",
                                 x.getId().toString()))))
@@ -305,7 +305,7 @@ public class EventServiceImpl implements EventService {
         }
         if (Boolean.TRUE.equals(onlyAvailable)) {
             rez = preRez.stream().filter(x -> x.getParticipantLimit() > eventRequestRepository
-                            .countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED, x.getId()))
+                            .countByStatusAndEventId(EventRequestStatusEnum.CONFIRMED, x.getId()))
                     .collect(Collectors.toList());
         } else {
             rez = preRez;
@@ -313,7 +313,7 @@ public class EventServiceImpl implements EventService {
         statisticModuleClient.postRequestToHit(request);
         return rez.stream()
                 .map(x -> CustomMapper.INSTANCE.toEventShortDto(x,
-                        eventRequestRepository.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED,
+                        eventRequestRepository.countByStatusAndEventId(EventRequestStatusEnum.CONFIRMED,
                                 x.getId()),
                         statisticModuleClient.getCountViewsOfHit(String.join("", "/events/",
                                 x.getId().toString()))))

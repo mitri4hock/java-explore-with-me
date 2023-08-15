@@ -59,13 +59,13 @@ public class RequestServiceImpl implements RequestService {
             throw new ConflictException("попытка подписаться на неопубликованное событие",
                     new ErrorDtoUtil("Incorrectly made request.", LocalDateTime.now()));
         }
-        if (requestRepository.findByEvent_IdAndRequester_Id(eventId, userId).isPresent()) {
+        if (requestRepository.findByEventIdAndRequesterId(eventId, userId).isPresent()) {
             log.info("Попытка повторной подписки на событие. EventId={}, UserId={}", eventId, userId);
             throw new ConflictException("Попытка повторной подписки на событие",
                     new ErrorDtoUtil("Incorrectly made request.", LocalDateTime.now()));
         }
         if (event.getParticipantLimit() != 0 &&
-                event.getParticipantLimit() == requestRepository.countByEvent_IdAndStatus(eventId,
+                event.getParticipantLimit() == requestRepository.countByEventIdAndStatus(eventId,
                         EventRequestStatusEnum.CONFIRMED)) {
             log.info("Попытка подписки на событие c заполненным лимитом. EventId={}", eventId);
             throw new ConflictException("Попытка подписки на событие c заполненным лимитом.",
@@ -120,7 +120,7 @@ public class RequestServiceImpl implements RequestService {
                     new ErrorDtoUtil("The required object was not found.", LocalDateTime.now()));
         }
 
-        var rez = requestRepository.findByRequester_IdOrderByCreatedDesc(userId);
+        var rez = requestRepository.findByRequesterIdOrderByCreatedDesc(userId);
         return rez.stream()
                 .map(x -> CustomMapper.INSTANCE.toParticipationRequestDto(x, true))
                 .collect(Collectors.toList());
@@ -154,7 +154,7 @@ public class RequestServiceImpl implements RequestService {
                 new ArrayList<ParticipationRequestDto>());
         List<ParticipationRequestDto> unit = null;
         for (Long requestId : eventRequestStatusUpdateRequestDto.getRequestIds()) {
-            EventRequest eventRequest = requestRepository.findByEvent_IdAndId(eventId, requestId)
+            EventRequest eventRequest = requestRepository.findByEventIdAndId(eventId, requestId)
                     .orElseThrow(() -> {
                         log.info("запрошено изменение статуса бронирования несуществующего запроса");
                         throw new NotFoundException(String.join("", "Request was not found"),
@@ -168,7 +168,7 @@ public class RequestServiceImpl implements RequestService {
 
             switch (eventRequestStatusUpdateRequestDto.getStatus()) {
                 case CONFIRMED:
-                    long countOfConfirmed = requestRepository.countByEvent_IdAndStatus(eventId,
+                    long countOfConfirmed = requestRepository.countByEventIdAndStatus(eventId,
                             EventRequestStatusEnum.CONFIRMED);
                     if (event.getParticipantLimit() != 0 && countOfConfirmed >= event.getParticipantLimit()) {
                         throw new ConflictException("The participant limit has been reached",
@@ -184,7 +184,7 @@ public class RequestServiceImpl implements RequestService {
                     unit.add(CustomMapper.INSTANCE.toParticipationRequestDto(eventRequest, true));
                     rez.setConfirmedRequests(unit);
                     if (event.getParticipantLimit() - 1 == countOfConfirmed) {
-                        requestRepository.findByEvent_IdAndStatus(eventId, EventRequestStatusEnum.PENDING).stream()
+                        requestRepository.findByEventIdAndStatus(eventId, EventRequestStatusEnum.PENDING).stream()
                                 .forEach(x -> {
                                     x.setStatus(EventRequestStatusEnum.REJECTED);
                                     requestRepository.save(x);
@@ -278,7 +278,7 @@ public class RequestServiceImpl implements RequestService {
 
         log.info("обновлено событие: {}", event);
         return CustomMapper.INSTANCE.toEventFullDto(event,
-                eventRequestRepository.countByStatusAndEvent_Id(EventRequestStatusEnum.CONFIRMED, eventId),
+                eventRequestRepository.countByStatusAndEventId(EventRequestStatusEnum.CONFIRMED, eventId),
                 statisticModuleClient.getCountViewsOfHit(String.join("", "/events/",
                         eventId.toString())));
     }

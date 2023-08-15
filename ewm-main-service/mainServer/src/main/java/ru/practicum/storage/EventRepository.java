@@ -12,9 +12,9 @@ import java.util.Optional;
 @Repository
 public interface EventRepository extends JpaRepository<Event, Long> {
 
-    List<Event> findByInitiator_Id(Long id, Pageable pageable);
+    List<Event> findByInitiatorId(Long id, Pageable pageable);
 
     Optional<Event> findByIdAndState(Long id, StateEnum state);
 
-    List<Event> findByCategory_Id(Long id);
+    List<Event> findByCategoryId(Long id);
 }
