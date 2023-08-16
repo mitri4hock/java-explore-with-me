@@ -10,9 +10,8 @@ import javax.validation.constraints.NotBlank;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CategoryDto {
-    private Long id;
+public class CreatePatchCommentDto {
     @NotBlank
-    @Length(max = 50)
-    private String name;
+    @Length(max = 5000)
+    private String commentText; // текст комментария
 }
