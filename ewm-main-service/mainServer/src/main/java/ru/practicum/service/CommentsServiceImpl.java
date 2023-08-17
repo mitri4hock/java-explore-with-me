@@ -133,6 +133,7 @@ public class CommentsServiceImpl implements CommentsService {
     }
 
     @Override
+    @Transactional
     public CommentDto deleteCommentByAdmin(Long commentId) {
         commentsRepository.findById(commentId).orElseThrow(() -> {
             log.info("Попытка удалить несуществующий комментарий админом. CommentId={}", commentId);

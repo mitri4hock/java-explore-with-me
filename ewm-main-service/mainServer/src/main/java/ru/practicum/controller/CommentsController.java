@@ -1,5 +1,6 @@
 package ru.practicum.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
@@ -21,9 +22,7 @@ public class CommentsController {
 
     private final CommentsService commentsService;
 
-    /**
-     * @operation Cоздание комментария. Комментарий можно написать только на опубликованное событие
-     */
+    @Operation(summary = "Cоздание комментария. Комментарий можно написать только на опубликованное событие")
     @PostMapping("/comment/{eventId}/{commentatorId}")
     @ResponseStatus(HttpStatus.CREATED)
     public CommentDto createComment(@PathVariable @PositiveOrZero Long eventId,
@@ -32,10 +31,8 @@ public class CommentsController {
         return commentsService.createComment(eventId, commentatorId, createPatchCommentDto);
     }
 
-    /**
-     * @operation обновление комментария самм создавшим комментарий пользователем. Обновить моно только свой комментарий
-     * Событие до сих пор должно быть опубликаовано
-     */
+    @Operation(summary = "обновление комментария самм создавшим комментарий пользователем. Обновить моно" +
+            " только свой комментарий Событие до сих пор должно быть опубликаовано")
     @PatchMapping("/comment/{commentId}/{commentatorId}")
     @ResponseStatus(HttpStatus.OK)
     public CommentDto patchCommentByOwner(@PathVariable @PositiveOrZero Long commentId,
@@ -44,9 +41,7 @@ public class CommentsController {
         return commentsService.patchCommentByOwner(commentId, commentatorId, createPatchCommentDto);
     }
 
-    /**
-     * @operation правка комментария админом
-     */
+    @Operation(summary = "правка комментария админом")
     @PatchMapping("/admin/comment/{commentId}")
     @ResponseStatus(HttpStatus.OK)
     public CommentDto patchCommentByAdmin(@PathVariable @PositiveOrZero Long commentId,
@@ -54,9 +49,7 @@ public class CommentsController {
         return commentsService.patchCommentByAdmin(commentId, createPatchCommentDto);
     }
 
-    /**
-     * @operation удаление комментария владельцем
-     */
+    @Operation(summary = "удаление комментария владельцем")
     @DeleteMapping("/comment/{commentId}/{commentatorId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public CommentDto deleteCommentByOwner(@PathVariable @PositiveOrZero Long commentId,
@@ -64,18 +57,14 @@ public class CommentsController {
         return commentsService.deleteCommentByOwner(commentId, commentatorId);
     }
 
-    /**
-     * @operation удаление комментария админом
-     */
+    @Operation(summary = "удаление комментария админом")
     @DeleteMapping("/admin/comment/{commentId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public CommentDto deleteCommentByAdmin(@PathVariable @PositiveOrZero Long commentId) {
         return commentsService.deleteCommentByAdmin(commentId);
     }
 
-    /**
-     * @operation получить все комментарии пользователя
-     */
+    @Operation(summary = "получить все комментарии пользователя")
     @GetMapping("/comment/all/{commentatorId}")
     @ResponseStatus(HttpStatus.OK)
     public List<CommentDto> findAllMyComment(@PathVariable @PositiveOrZero Long commentatorId,
@@ -84,9 +73,7 @@ public class CommentsController {
         return commentsService.findAllMyComment(commentatorId, from, size);
     }
 
-    /**
-     * @operation получить все комменты для конкретного события
-     */
+    @Operation(summary = "получить все комменты для конкретного события")
     @GetMapping("/comment/all/event/{eventId}")
     @ResponseStatus(HttpStatus.OK)
     public List<CommentDto> findAllCommentsForEvent(@PathVariable @PositiveOrZero Long eventId,
@@ -95,9 +82,7 @@ public class CommentsController {
         return commentsService.findAllCommentsForEvent(eventId, from, size);
     }
 
-    /**
-     * @operation получение конкретного комментария любым пользователем
-     */
+    @Operation(summary = "получение конкретного комментария любым пользователем")
     @GetMapping("/comment/{commentId}")
     @ResponseStatus(HttpStatus.OK)
     public CommentDto findComment(@PathVariable @PositiveOrZero Long commentId) {
