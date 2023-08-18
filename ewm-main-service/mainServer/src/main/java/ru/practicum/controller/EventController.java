@@ -1,5 +1,6 @@
 package ru.practicum.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.AllArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -26,11 +27,8 @@ public class EventController {
 
     private final EventService eventService;
 
-    /**
-     * @operation Добавление нового события
-     * Обратите внимание: дата и время на которые намечено событие не может быть раньше,
-     * чем через два часа от текущего момента
-     */
+    @Operation(summary = "Добавление нового события. Обратите внимание: дата и время на которые намечено событие" +
+            " не может быть раньше, чем через два часа от текущего момента")
     @PostMapping("/users/{userId}/events")
     @ResponseStatus(HttpStatus.CREATED)
     public EventFullDto createEvent(@PathVariable @PositiveOrZero Long userId,
@@ -38,13 +36,12 @@ public class EventController {
         return eventService.createEvent(userId, newEventDto);
     }
 
-    /**
-     * @operation Изменение события добавленного текущим пользователем
-     * Обратите внимание:
-     * изменить можно только отмененные события или события в состоянии ожидания модерации (Ожидается код ошибки 409)
-     * дата и время на которые намечено событие не может быть раньше, чем через два часа от текущего момента
-     * (Ожидается код ошибки 409)
-     */
+    @Operation(summary = "Изменение события добавленного текущим пользователем" +
+            " Обратите внимание:" +
+            "изменить можно только отмененные события или события в состоянии ожидания модерации " +
+            "(Ожидается код ошибки 409)" +
+            " дата и время на которые намечено событие не может быть раньше, чем через два часа от текущего момента" +
+            "(Ожидается код ошибки 409)")
     @PatchMapping("/users/{userId}/events/{eventId}")
     @ResponseStatus(HttpStatus.OK)
     public EventFullDto patchEvent(@PathVariable @PositiveOrZero Long userId,
@@ -54,10 +51,8 @@ public class EventController {
 
     }
 
-    /**
-     * @operation Получение событий, добавленных текущим пользователем
-     * В случае, если по заданным фильтрам не найдено ни одного события, возвращает пустой список
-     */
+    @Operation(summary = "Получение событий, добавленных текущим пользователем." +
+            " В случае, если по заданным фильтрам не найдено ни одного события, возвращает пустой список")
     @GetMapping("/users/{userId}/events")
     @ResponseStatus(HttpStatus.OK)
     public List<EventShortDto> getEventForUser(@PathVariable @PositiveOrZero Long userId,
@@ -66,10 +61,8 @@ public class EventController {
         return eventService.getEventForUser(userId, from, size);
     }
 
-    /**
-     * @operation Получение полной информации о событии добавленном текущим пользователем
-     * В случае, если события с заданным id не найдено, возвращает статус код 404
-     */
+    @Operation(summary = "Получение полной информации о событии добавленном текущим пользователем." +
+            " В случае, если события с заданным id не найдено, возвращает статус код 404")
     @GetMapping("/users/{userId}/events/{eventId}")
     @ResponseStatus(HttpStatus.OK)
     public EventFullDto findEventCreatedByUser(@PathVariable @PositiveOrZero Long userId,
@@ -77,10 +70,8 @@ public class EventController {
         return eventService.findEventCreatedByUser(userId, eventId);
     }
 
-    /**
-     * @operation Получение информации о запросах на участие в событии текущего пользователя
-     * В случае, если по заданным фильтрам не найдено ни одной заявки, возвращает пустой список
-     */
+    @Operation(summary = "Получение информации о запросах на участие в событии текущего пользователя." +
+            " В случае, если по заданным фильтрам не найдено ни одной заявки, возвращает пустой список")
     @GetMapping("/users/{userId}/events/{eventId}/requests")
     @ResponseStatus(HttpStatus.OK)
     public List<ParticipationRequestDto> getParticipationForUser(@PathVariable @PositiveOrZero Long userId,
@@ -88,14 +79,12 @@ public class EventController {
         return eventService.getParticipationForUser(userId, eventId);
     }
 
-    /**
-     * @operation Получение подробной информации об опубликованном событии по его идентификатору
-     * Обратите внимание:
-     * событие должно быть опубликовано
-     * информация о событии должна включать в себя количество просмотров и количество подтвержденных запросов
-     * информацию о том, что по этому эндпоинту был осуществлен и обработан запрос, нужно сохранить в сервисе статистики
-     * В случае, если события с заданным id не найдено, возвращает статус код 404
-     */
+    @Operation(summary = "Получение подробной информации об опубликованном событии по его идентификатору" +
+            " Обратите внимание:" +
+            " событие должно быть опубликовано" +
+            " информация о событии должна включать в себя количество просмотров и количество подтвержденных запросов" +
+            " информацию о том, что по этому эндпоинту был осуществлен и обработан запрос, нужно сохранить в сервисе статистики." +
+            " В случае, если события с заданным id не найдено, возвращает статус код 404")
     @GetMapping("/events/{id}")
     @ResponseStatus(HttpStatus.OK)
     public EventFullDto findPublishedEvent(@PathVariable @PositiveOrZero Long id,
@@ -103,11 +92,9 @@ public class EventController {
         return eventService.findPublishedEvent(id, request);
     }
 
-    /**
-     * @operation Поиск событий
-     * Эндпоинт возвращает полную информацию обо всех событиях подходящих под переданные условия     *
-     * В случае, если по заданным фильтрам не найдено ни одного события, возвращает пустой список
-     */
+    @Operation(summary = "Поиск событий. Эндпоинт возвращает полную информацию обо всех событиях подходящих " +
+            "под переданные условия. В случае, если по заданным фильтрам не найдено ни одного события, " +
+            "возвращает пустой список")
     @GetMapping("/admin/events")
     @ResponseStatus(HttpStatus.OK)
     public List<EventFullDto> findEventByAdmin(@RequestParam(value = "users", required = false) ArrayList<Long> users,
@@ -121,16 +108,15 @@ public class EventController {
         return eventService.findEventByAdmin(users, states, categories, rangeStart, rangeEnd, from, size);
     }
 
-    /**
-     * @operation Получение событий с возможностью фильтрации
-     * Обратите внимание:
-     * это публичный эндпоинт, соответственно в выдаче должны быть только опубликованные события
-     * текстовый поиск (по аннотации и подробному описанию) должен быть без учета регистра букв
-     * если в запросе не указан диапазон дат [rangeStart-rangeEnd], то нужно выгружать события, которые произойдут позже текущей даты и времени
-     * информация о каждом событии должна включать в себя количество просмотров и количество уже одобренных заявок на участие
-     * информацию о том, что по этому эндпоинту был осуществлен и обработан запрос, нужно сохранить в сервисе статистики
-     * В случае, если по заданным фильтрам не найдено ни одного события, возвращает пустой список
-     */
+    @Operation(summary = "Получение событий с возможностью фильтрации." +
+            " Обратите внимание: это публичный эндпоинт, соответственно в выдаче должны быть " +
+            "только опубликованные события текстовый поиск (по аннотации и подробному описанию) должен " +
+            "быть без учета регистра букв если в запросе не указан диапазон дат [rangeStart-rangeEnd], то нужно" +
+            "выгружать события, которые произойдут позже текущей даты и времени" +
+            " информация о каждом событии должна включать в себя количество просмотров и количество уже одобренных " +
+            "заявок на участие информацию о том, что по этому эндпоинту был осуществлен и обработан запрос, " +
+            "нужно сохранить в сервисе статистики В случае, если по заданным фильтрам не найдено ни " +
+            "одного события, возвращает пустой список")
     @GetMapping("/events")
     @ResponseStatus(HttpStatus.OK)
     public List<EventShortDto> findEventByUser(@RequestParam(value = "text", required = false) String text,

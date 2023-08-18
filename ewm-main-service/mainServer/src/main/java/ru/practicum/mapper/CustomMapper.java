@@ -28,6 +28,18 @@ public interface CustomMapper {
 
     Compilation toCompilation(NewCompilationDto newCompilationDto);
 
+    default CommentDto toCommentDto(Comment comment) {
+        CommentDto rez = new CommentDto();
+
+        rez.setId(comment.getId());
+        rez.setEventId(comment.getEvent().getId());
+        rez.setCommentatorId((comment.getCommentator().getId()));
+        rez.setCommentText(comment.getCommentText());
+        rez.setCreatedDate(comment.getCreatedDate());
+
+        return rez;
+    }
+
     default Event toEvent(NewEventDto newEventDto, Category category, User initiator) {
         final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(UtilClass.FORMAT_DATE);
         Event result = new Event();
@@ -96,7 +108,7 @@ public interface CustomMapper {
     }
 
     default ParticipationRequestDto toParticipationRequestDto(EventRequest eventRequest,
-                                                             boolean isRejectedStatusIsCanceled) { // из-за тестов ПОСТМАН - в разных тестах должно быть разное именование для одного и того-же
+                                                              boolean isRejectedStatusIsCanceled) { // из-за тестов ПОСТМАН - в разных тестах должно быть разное именование для одного и того-же
         final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(UtilClass.FORMAT_DATE);
         ParticipationRequestDto rez = new ParticipationRequestDto();
 
